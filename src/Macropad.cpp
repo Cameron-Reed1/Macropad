@@ -18,6 +18,11 @@ void Macropad::init(MacropadState* state)
     this->init(state, true, true, true, true, true, true, true);
 }
 
+void Macropad::init(bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma)
+{
+    this->init(nullptr, init_tinyUSB, init_keys, init_oled, init_speaker, init_pixels, init_encoder, init_stemma);
+}
+
 void Macropad::init(MacropadState* state, bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma)
 {
 	m_state = state;

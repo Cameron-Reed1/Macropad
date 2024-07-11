@@ -3,7 +3,7 @@
 #include "MacropadState.h"
 
 
-namespace ConfigState {
+namespace DebugState {
 void load_state(MacropadState* parent);
 }
 

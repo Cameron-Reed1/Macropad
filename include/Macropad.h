@@ -28,6 +28,7 @@ class Macropad
 {
 public:
     void init(MacropadState* state); 
+    void init(bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma);
     void init(MacropadState* state, bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma);
 	void run();
 	int get_encoder_position();

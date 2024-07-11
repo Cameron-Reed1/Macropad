@@ -1,10 +1,33 @@
-#include "Macropad.h"
-#include "RippleAnim.h"
+#include "states/LinkState.h"
 #include "states/common.h"
+#include "MacropadState.h"
+#include "Macropad.h"
+
 #include <string>
 
-extern MacropadState default_state;
-extern uint64_t press_start[12];
+
+namespace LinkState {
+
+void button_pressed(uint8_t key, bool rising, bool falling);
+
+void encoder_handler(int last_position, int new_position);
+void oled_draw(SH1106_SPI oled);
+
+void reset();
+void cancel();
+void finish();
+void next_page();
+void prev_page();
+void next_step(uint8_t selection);
+void prev_step();
+
+static MacropadState linkState(button_pressed,
+        nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr,
+        encoder_handler, nullptr, oled_draw);
+
 
 enum STEP: uint8_t {
 	COLLECTION_SELECTION = 0,
@@ -22,6 +45,64 @@ static int16_t offset = -1;
 static uint8_t item_count;
 static uint8_t selections[3] = { 0 };
 static STEP current_step;
+
+
+void load_state(MacropadState *parent)
+{
+    linkState.set_oled_automatic_updates(false);
+    linkState.set_parent_state(parent);
+
+    reset();
+
+    Macropad::get_instance().set_macropad_state(&linkState);
+}
+
+void button_pressed(uint8_t key, bool rising, bool falling)
+{
+    ripple(key, rising, falling);
+
+	if (falling) {
+		if (first_page && key == 0) {
+			prev_step();
+		} else {
+			uint8_t selection = offset + key;
+			if (selection < item_count) {
+				next_step(selection);
+			}
+		}
+	}
+}
+
+void encoder_handler(int last_position, int new_position)
+{
+	if (new_position - last_position > 0) {
+		next_page();
+	} else if (new_position - last_position < 0) {
+		prev_page();
+	}
+}
+
+void oled_draw(SH1106_SPI oled)
+{
+	oled.gotoXY(0, 0);
+	oled.print(title);
+
+	if (first_page) {
+		oled.gotoXY(0, 1);
+		oled.print("Back");
+	}
+
+	for (uint8_t i = first_page ? 1 : 0; i < 12 && i + offset < item_count; i++) {
+		oled.gotoXY((i % 3) * 43, (((i - (i % 3)) / 3) * 2) + 1);
+		if (current_step != CHAPTER_SELECTION) {
+			oled.print(friendly_names[i + offset]);
+        } else {
+			oled.print(i + offset + 1);
+        }
+	}
+}
+
+
 
 static const char* const collections[] = {
 	"ot",
@@ -463,24 +544,7 @@ static const uint8_t* book_chapter_counts[] = {
 	pgp_chapter_count
 };
 
-void oled_draw_link_build_state(SH1106_SPI oled)
-{
-	oled.gotoXY(0, 0);
-	oled.print(title);
 
-	if (first_page) {
-		oled.gotoXY(0, 1);
-		oled.print("Back");
-	}
-
-	for (uint8_t i = first_page ? 1 : 0; i < 12 && i + offset < item_count; i++) {
-		oled.gotoXY((i % 3) * 43, (((i - (i % 3)) / 3) * 2) + 1);
-		if (current_step != CHAPTER_SELECTION)
-			oled.print(friendly_names[i + offset]);
-		else
-			oled.print(i + offset + 1);
-	}
-}
 
 void reset()
 {
@@ -516,28 +580,31 @@ void finish()
 
 void next_page()
 {
-	if (last_page)
+	if (last_page) {
 		return;
+    }
 
 	Macropad::get_instance().update_oled();
 	offset += 12;
 
 	first_page = false;
-	if (offset + 12 >= item_count)
+	if (offset + 12 >= item_count) {
 		last_page = true;
-
+    }
 }
 
 void prev_page()
 {
-	if (first_page)
+	if (first_page) {
 		return;
+    }
 
 	offset -= 12;
 
 	last_page = false;
-	if (offset == -1)
+	if (offset == -1) {
 		first_page = true;
+    }
 
 	Macropad::get_instance().update_oled();
 }
@@ -581,8 +648,7 @@ void next_step(uint8_t selection)
 
 void prev_step()
 {
-	switch (current_step)
-	{
+	switch (current_step) {
 		case CHAPTER_SELECTION:
 			title = collection_titles[selections[0]];
 			friendly_names = book_names_reference[selections[0]];
@@ -610,45 +676,5 @@ void prev_step()
 	Macropad::get_instance().update_oled();
 }
 
-void button_pressed(uint8_t key, bool rising, bool falling)
-{
-    ripple(key, rising, falling);
-
-	if (falling) {
-		if (first_page && key == 0) {
-			prev_step();
-		} else {
-			uint8_t selection = offset + key;
-			if (selection < item_count) {
-				next_step(selection);
-			}
-		}
-	}
 }
 
-void on_encoder_tick(int last_position, int new_position)
-{
-	if (new_position - last_position > 0) {
-		next_page();
-	} else if (new_position - last_position < 0) {
-		prev_page();
-	}
-}
-
-void build_link_macro(bool rising, bool falling)
-{
-	(void) rising;
-
-	static MacropadState link_build_state = MacropadState(&default_state, button_pressed);
-
-	if (falling)
-	{
-		link_build_state.set_encoder_callback(on_encoder_tick);
-		link_build_state.set_oled_draw_function(oled_draw_link_build_state);
-		link_build_state.set_oled_automatic_updates(false);
-
-		reset();
-
-		Macropad::get_instance().set_macropad_state(&link_build_state);
-	}
-}
