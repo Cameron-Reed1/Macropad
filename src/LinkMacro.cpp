@@ -1,5 +1,6 @@
 #include "Macropad.h"
 #include "RippleAnim.h"
+#include "states/common.h"
 #include <string>
 
 extern MacropadState default_state;
@@ -611,13 +612,9 @@ void prev_step()
 
 void button_pressed(uint8_t key, bool rising, bool falling)
 {
-	if (rising) {
-		press_start[key] = get_absolute_time();
-		ripple_anim_run(key, 0, 255, 255, DIR_OUT);
-	} else if (falling) {
-		if (get_absolute_time() - press_start[key] > 320 * 1000)
-			ripple_anim_run(key, 0, 255, 0, DIR_IN);
+    ripple(key, rising, falling);
 
+	if (falling) {
 		if (first_page && key == 0) {
 			prev_step();
 		} else {

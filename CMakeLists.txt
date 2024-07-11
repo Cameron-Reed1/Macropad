@@ -23,7 +23,7 @@ include("libraries/SH1106/SH1106_oled.cmake")
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(Macropad src/main.cpp src/Macropad.cpp src/MacropadState.cpp src/MacropadUsbCallbacks.cpp src/RotaryEncoder.cpp src/Keys.cpp src/RippleAnim.cpp src/usb_descriptors.c src/Macro.cpp src/LinkMacro.cpp src/Config.cpp)
+add_executable(Macropad src/main.cpp src/Macropad.cpp src/MacropadState.cpp src/MacropadUsbCallbacks.cpp src/RotaryEncoder.cpp src/Keys.cpp src/RippleAnim.cpp src/usb_descriptors.c src/Macro.cpp src/LinkMacro.cpp src/Config.cpp src/states/common.cpp src/states/ConfigState.cpp)
 
 pico_set_program_name(Macropad "Macropad")
 pico_set_program_version(Macropad "0.3")

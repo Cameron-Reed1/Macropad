@@ -4,13 +4,14 @@
 #include "LinkMacro.h"
 #include <pico/bootrom.h>
 
+#include "states/common.h"
+#include "states/ConfigState.h"
+
 void save_conf(bool rising, bool falling);
 void erase_conf(bool rising, bool falling);
-MacropadState default_state(button_any, load_teams_state, load_generic_state, load_brightness_adjustment_state, build_link_macro, load_dev_state, nullptr, nullptr, nullptr, nullptr, erase_conf, save_conf, /*load_dummy_state*/ nullptr, encoder_handler, encoder_pressed, oled_draw);
+MacropadState default_state(ripple, load_teams_state, load_generic_state, load_brightness_adjustment_state, build_link_macro, load_dev_state, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, /*load_dummy_state*/ nullptr, encoder_handler, encoder_pressed, oled_draw);
 MacropadState genericState;
 Macropad& macropad = Macropad::get_instance();
-
-uint64_t press_start[12] = {0};
 
 int main(void) {
     CFG* cfg = Config::read();
@@ -23,26 +24,6 @@ int main(void) {
 	}
 
 	return 0;
-}
-
-void button_any(uint8_t key, bool rising, bool falling) {
-	// uint16_t colorIndex = (get_absolute_time() / 1000000) % 765;
-
-	// uint8_t red = ((255 - colorIndex) * (colorIndex < 255)) + ((colorIndex - 510) * (colorIndex >= 510));
-	// uint8_t green = ((colorIndex) * (colorIndex < 255)) + ((510 - colorIndex) * (colorIndex >= 255 && colorIndex < 510));
-	// uint8_t blue = ((colorIndex - 255) * (colorIndex >= 255 && colorIndex < 510)) + ((765 - colorIndex) * (colorIndex >= 510));
-
-    CFG* cfg = Config::get();
-
-	if (rising) {
-        // macropad.set_pixel_color(key, cfg->colorOutR, cfg->colorOutG, cfg->colorOutB);
-		press_start[key] = get_absolute_time();
-		ripple_anim_run(key, cfg->colorOutR, cfg->colorOutG, cfg->colorOutB, DIR_OUT);
-	} else if (falling) {
-        // macropad.set_pixel_color(key, 0, 0, 0);
-		if (get_absolute_time() - press_start[key] > 320 * 1000)
-			ripple_anim_run(key, cfg->colorInR, cfg->colorInG, cfg->colorInB, DIR_IN);
-	}
 }
 
 void erase_conf(bool rising, bool falling)
@@ -63,19 +44,11 @@ void save_conf(bool rising, bool falling)
     }
 }
 
-void return_to_parent_state(bool rising, bool falling)
-{
-	(void) rising;
-
-	if (falling)
-        macropad.load_parent_state();
-}
-
 void load_teams_state(bool rising, bool falling)
 {
 	(void) rising;
 	static MacropadState teamsState =
-		MacropadState(&default_state, button_any,
+		MacropadState(&default_state, ripple,
 					return_to_parent_state, nullptr, nullptr,
 					nullptr, nullptr, nullptr,
 					teams_blur, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_H>, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_K>,
@@ -90,7 +63,7 @@ void load_teams_state(bool rising, bool falling)
 void load_generic_state(bool rising, bool falling)
 {
 	(void) rising;
-	genericState = MacropadState(&default_state, button_any,
+	genericState = MacropadState(&default_state, ripple,
 									return_to_parent_state, press_keys<HID_KEY_GUI_LEFT, HID_KEY_L>, press_keys<HID_KEY_GUI_LEFT, HID_KEY_D>,
 									press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_C>, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_V>, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_A>,
 									press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_ESCAPE>, press_keys<HID_KEY_GUI_LEFT, HID_KEY_I>, press_keys<HID_KEY_GUI_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_S>,
@@ -104,12 +77,12 @@ void load_generic_state(bool rising, bool falling)
 
 void load_brightness_adjustment_state(bool rising, bool falling)
 {
-	static MacropadState brightnessAdjustState(&default_state, button_any,
-									nullptr, nullptr, load_brightness_adjustment_state,
-									nullptr, nullptr, nullptr,
-									nullptr, nullptr, nullptr,
-									nullptr, nullptr, nullptr,
-									encoder_handler_brightness_adjust, nullptr, oled_draw_brightness_adjust_state);
+	// static MacropadState brightnessAdjustState(&default_state, ripple,
+	// 								nullptr, nullptr, load_brightness_adjustment_state,
+	// 								nullptr, nullptr, nullptr,
+	// 								nullptr, nullptr, nullptr,
+	// 								nullptr, nullptr, nullptr,
+	// 								encoder_handler_brightness_adjust, nullptr, oled_draw_brightness_adjust_state);
 
 //	static bool set_initial_position = false;
 //	if (!set_initial_position) {
@@ -117,18 +90,19 @@ void load_brightness_adjustment_state(bool rising, bool falling)
 //		brightnessAdjustState.set_encoder_position(80);
 //	}
 
-    CFG* cfg = Config::get();
+    // CFG* cfg = Config::get();
 
 	if (rising) {
-        brightnessAdjustState.set_encoder_position(cfg->brightness);
-		macropad.set_macropad_state(&brightnessAdjustState);
+        // brightnessAdjustState.set_encoder_position(cfg->brightness);
+		// macropad.set_macropad_state(&brightnessAdjustState);
 	}
 
 	if (falling) {
-        macropad.set_pixels_brightness(macropad.get_encoder_position());
-		ripple_anim_set_brightness(macropad.get_encoder_position());
-        cfg->brightness = macropad.get_encoder_position();
-		macropad.load_parent_state();
+        ConfigState::load_state(macropad.get_macropad_state());
+        // macropad.set_pixels_brightness(macropad.get_encoder_position());
+		// ripple_anim_set_brightness(macropad.get_encoder_position());
+        // cfg->brightness = macropad.get_encoder_position();
+		// macropad.load_parent_state();
         // Config::flush();
 	}
 }
@@ -137,9 +111,9 @@ void load_dev_state(bool rising, bool falling)
 {
 	(void) rising;
 	static MacropadState devState =
-		MacropadState(&default_state, button_any,
-					return_to_parent_state, enter_bootloader, nullptr,
-					nullptr, nullptr, nullptr,
+		MacropadState(&default_state, ripple,
+					return_to_parent_state, enter_bootloader, save_conf,
+					erase_conf, nullptr, nullptr,
 					nullptr, nullptr, nullptr,
 					nullptr, nullptr, nullptr,
 					nullptr, nullptr, oled_draw_dev_state);
@@ -167,7 +141,7 @@ void type_monitor(bool rising, bool falling)
 
 void power_off(bool rising, bool falling) {
 	(void) rising;
-	static MacropadState powerState(&genericState, button_any,
+	static MacropadState powerState(&genericState, ripple,
 									return_to_parent_state, return_to_parent_state, return_to_parent_state,
 									return_to_parent_state, return_to_parent_state, return_to_parent_state,
 									return_to_parent_state, return_to_parent_state, return_to_parent_state,
@@ -245,7 +219,8 @@ void encoder_handler(int last_position, int new_position)
 	}
 }
 
-void encoder_handler_brightness_adjust(int last_position, int new_position) {
+void encoder_handler_brightness_adjust(int last_position, int new_position)
+{
 	(void) last_position;
 
 	if (new_position < 0) {
@@ -311,8 +286,8 @@ void oled_draw_teams_state(SH1106_SPI oled)
 void oled_draw_dev_state(SH1106_SPI oled)
 {
 	const char* const functions[4][3] = {
-		{"Back", "Boot", ""},
-		{"", "", ""},
+		{"Back", "Boot", "Save"},
+		{"Erase", "", ""},
 		{"", "", ""},
 		{"", "", ""}
 	};
@@ -355,7 +330,8 @@ void oled_draw_power_state ( SH1106_SPI oled )
 }
 
 
-void oled_draw_brightness_adjust_state(SH1106_SPI oled) {
+void oled_draw_brightness_adjust_state(SH1106_SPI oled)
+{
 	oled.gotoXY(0, 0);
 	oled.print("Brightness: ");
 	oled.print(macropad.get_encoder_position());

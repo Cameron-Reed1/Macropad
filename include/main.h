@@ -3,7 +3,6 @@
 #include "Macropad.h"
 
 void button_any(uint8_t key, bool rising, bool falling);
-void return_to_parent_state(bool rising, bool falling);
 
 void load_teams_state(bool rising, bool falling);
 void load_generic_state(bool rising, bool falling);
