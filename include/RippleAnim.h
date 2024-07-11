@@ -9,12 +9,12 @@
 #define PIXEL_COUNT 12
 #define FRAME_COUNT 6
 #define FRAME_TIME_MS 100
-#define MAX_CONCURRENT_ANIMATIONS 12
+#define MAX_CONCURRENT_ANIMATIONS 24
 #define FRAME_TIME_OVERLAP_MS 25
 
-enum RippleAnimDir : uint32_t {
-	DIR_OUT = 0,
-	DIR_IN
+enum RippleAnimDir : int8_t {
+	DIR_IN = -1,
+	DIR_OUT = 1
 };
 
 void ripple_anim_setup();

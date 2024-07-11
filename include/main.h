@@ -8,6 +8,7 @@ void return_to_parent_state(bool rising, bool falling);
 void load_teams_state(bool rising, bool falling);
 void load_generic_state(bool rising, bool falling);
 void load_brightness_adjustment_state(bool rising, bool falling);
+void load_dev_state(bool rising, bool falling);
 
 template <uint8_t key>
 void press_key(bool rising, bool falling) {
@@ -73,6 +74,7 @@ void type_monitor(bool rising, bool falling);
 void dock_macro(bool rising, bool falling);
 void teams_blur(bool rising, bool falling);
 void power_off(bool rising, bool falling);
+void enter_bootloader(bool rising, bool falling);
 
 void encoder_handler(int last_position, int new_position);
 void encoder_pressed(bool rising, bool falling);
@@ -81,6 +83,7 @@ void oled_draw(SH1106_SPI oled);
 void oled_draw_teams_state(SH1106_SPI oled);
 void oled_draw_generic_state(SH1106_SPI oled);
 void oled_draw_power_state(SH1106_SPI oled);
+void oled_draw_dev_state(SH1106_SPI oled);
 void oled_draw_brightness_adjust_state(SH1106_SPI oled);
 
 void encoder_handler_brightness_adjust(int last_position, int new_position);

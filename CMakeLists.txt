@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # initalize pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
@@ -22,10 +23,10 @@ include("libraries/SH1106/SH1106_oled.cmake")
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(Macropad src/main.cpp src/Macropad.cpp src/MacropadState.cpp src/MacropadUsbCallbacks.cpp src/RotaryEncoder.cpp src/Keys.cpp src/RippleAnim.cpp src/usb_descriptors.c src/Macro.cpp src/LinkMacro.cpp)
+add_executable(Macropad src/main.cpp src/Macropad.cpp src/MacropadState.cpp src/MacropadUsbCallbacks.cpp src/RotaryEncoder.cpp src/Keys.cpp src/RippleAnim.cpp src/usb_descriptors.c src/Macro.cpp src/LinkMacro.cpp src/Config.cpp)
 
 pico_set_program_name(Macropad "Macropad")
-pico_set_program_version(Macropad "0.1")
+pico_set_program_version(Macropad "0.3")
 
 pico_enable_stdio_uart(Macropad 0)
 pico_enable_stdio_usb(Macropad 0)
@@ -35,6 +36,8 @@ target_link_libraries(Macropad pico_stdlib)
 
 # Add any user requested libraries
 target_link_libraries(Macropad
+        hardware_flash
+        hardware_sync
         hardware_spi
         hardware_i2c
         hardware_pwm
@@ -44,6 +47,7 @@ target_link_libraries(Macropad
         tinyusb_device
         tinyusb_board
         pico_multicore
+        pico_bootrom
         )
 
 target_include_directories(Macropad PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include)

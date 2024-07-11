@@ -17,7 +17,7 @@ static const char* title;
 static const char* const* friendly_names;
 static bool first_page = true;
 static bool last_page = false;
-static uint8_t offset;
+static int16_t offset = -1;
 static uint8_t item_count;
 static uint8_t selections[3] = { 0 };
 static STEP current_step;
@@ -229,9 +229,96 @@ static const char* const bofm_books_friendly_names[] = {
 static const char* const pgp_books_friendly_names[] = {
 	"Moses",
 	"Abraham",
-	"JS Matt",
-	"JS Hist",
-	"Articles"
+	"JS M",
+	"JS H",
+	"A of F"
+};
+
+static const char* const collection_titles[] = {
+	"Old Testament",
+	"New Testament",
+	"Book of Mormon",
+	"Doctrince & Covenents",
+	"Pearl of Great Price"
+};
+
+static const char* const ot_books_titles[] = {
+	"Genesis",
+	"Exodus",
+	"Leviticus",
+	"Numbers",
+	"Deuteronomy",
+	"Joshua",
+	"Judges",
+	"Ruth",
+	"1 Samuel",
+	"2 Samuel",
+	"1 Kings",
+	"2 Kings",
+	"1 Chronicles",
+	"2 Chronicles",
+	"Ezra",
+	"Nehemiah",
+	"Esther",
+	"Job",
+	"Psalms",
+	"Proverbs",
+	"Ecclesiastes",
+	"Isaiah",
+	"Jeremiah",
+	"Lamentations",
+	"Ezekiel",
+	"Daniel",
+	"Hosea",
+	"Joel",
+	"Amos",
+	"Obadiah",
+	"Jonah",
+	"Micah",
+	"Nahum",
+	"Habakkuk",
+	"Zephaniah",
+	"Haggai",
+	"Zechariah",
+	"Malachi"
+};
+
+static const char* const nt_books_titles[] = {
+	"Matt",
+	"Mark",
+	"Luke",
+	"John",
+	"Acts",
+	"Romans",
+	"1 Corinthians",
+	"2 Corinthians",
+	"Galatians",
+	"Ephesians",
+	"Philipians",
+	"Colossians",
+	"1 Thessalonians",
+	"2 Thessalonians",
+	"1 Timothy",
+	"2 Timothy",
+	"Titus",
+	"Philemon",
+	"Hebrews",
+	"James",
+	"1 Peter",
+	"2 Peter",
+	"1 John",
+	"2 John",
+	"3 John",
+	"Jude",
+	"Revelations"
+};
+
+static const char* const pgp_books_titles[] = {
+	"Moses",
+	"Abraham",
+	"JS Matthew",
+	"JS History",
+	"Articles of Faith"
 };
 
 static const uint8_t ot_chapter_count[] = {
@@ -349,6 +436,14 @@ static const char* const * const book_names_reference[] = {
 	pgp_books_friendly_names
 };
 
+static const char* const * const book_titles_reference[] = {
+	ot_books_titles,
+	nt_books_titles,
+	bofm_books_friendly_names,
+	&collection_titles[3],
+	pgp_books_titles
+};
+
 static const uint8_t collections_count = sizeof(collections) / sizeof(collections[0]);
 
 static const uint8_t book_counts[] = {
@@ -372,22 +467,17 @@ void oled_draw_link_build_state(SH1106_SPI oled)
 	oled.gotoXY(0, 0);
 	oled.print(title);
 
-	oled.gotoXY(0, 1);
-	oled.print("Back");
-
-	for (uint8_t i = 1; i < 11 && i + offset <= item_count; i++) {
-		oled.gotoXY((i % 3) * 43, (((i - (i % 3)) / 3) * 2) + 1);
-		if (current_step != CHAPTER_SELECTION)
-			oled.print(friendly_names[i - 1 + offset]);
-		else
-			oled.print(i + offset);
+	if (first_page) {
+		oled.gotoXY(0, 1);
+		oled.print("Back");
 	}
 
-	oled.gotoXY(86, 7);
-	if (!last_page) {
-		oled.print("Next");
-	} else if (offset + 10 < item_count) {
-		oled.print(friendly_names[offset + 10]);
+	for (uint8_t i = first_page ? 1 : 0; i < 12 && i + offset < item_count; i++) {
+		oled.gotoXY((i % 3) * 43, (((i - (i % 3)) / 3) * 2) + 1);
+		if (current_step != CHAPTER_SELECTION)
+			oled.print(friendly_names[i + offset]);
+		else
+			oled.print(i + offset + 1);
 	}
 }
 
@@ -396,7 +486,7 @@ void reset()
 	url = base_url;
 	title = "";
 	friendly_names = collection_friendly_names;
-	offset = 0;
+	offset = -1;
 	item_count = collections_count;
 	first_page = true;
 	last_page = true;
@@ -428,13 +518,13 @@ void next_page()
 	if (last_page)
 		return;
 
-	offset += 10;
+	Macropad::get_instance().update_oled();
+	offset += 12;
 
 	first_page = false;
-	if (offset + 11 >= item_count)
+	if (offset + 12 >= item_count)
 		last_page = true;
 
-	Macropad::get_instance().update_oled();
 }
 
 void prev_page()
@@ -442,10 +532,10 @@ void prev_page()
 	if (first_page)
 		return;
 
-	offset -= 10;
+	offset -= 12;
 
 	last_page = false;
-	if (offset == 0)
+	if (offset == -1)
 		first_page = true;
 
 	Macropad::get_instance().update_oled();
@@ -456,9 +546,9 @@ void next_step(uint8_t selection)
 	switch (current_step)
 	{
 		case COLLECTION_SELECTION:
-			title = collection_friendly_names[selection];
+			title = collection_titles[selection];
 			friendly_names = book_names_reference[selection];
-			offset = 0;
+			offset = -1;
 			item_count = book_counts[selection];
 			first_page = true;
 			last_page = item_count <= 11;
@@ -468,9 +558,9 @@ void next_step(uint8_t selection)
 				break;
 			selection = 0;
 		case BOOK_SELECTION:
-			title = book_names_reference[selections[0]][selection];
+			title = book_titles_reference[selections[0]][selection];
 			friendly_names = nullptr;
-			offset = 0;
+			offset = -1;
 			item_count = book_chapter_counts[selections[0]][selection];
 			first_page = true;
 			last_page = item_count <= 11;
@@ -493,19 +583,19 @@ void prev_step()
 	switch (current_step)
 	{
 		case CHAPTER_SELECTION:
-			title = collection_friendly_names[selections[0]];
+			title = collection_titles[selections[0]];
 			friendly_names = book_names_reference[selections[0]];
-			offset = (selections[1] - (selections[1] % 10));
+			offset = (selections[1] - (selections[1] % 12)) - 1;
 			item_count = book_counts[selections[0]];
-			first_page = offset == 0;
-			last_page = offset + 11 >= item_count;
+			first_page = offset == -1;
+			last_page = (first_page ? offset + 11 : offset + 12) >= item_count;
 			current_step = BOOK_SELECTION;
 			if (item_count > 1)
 				break;
 		case BOOK_SELECTION:
 			title = "";
 			friendly_names = collection_friendly_names;
-			offset = 0;
+			offset = -1;
 			item_count = collections_count;
 			first_page = true;
 			last_page = true;
@@ -528,20 +618,23 @@ void button_pressed(uint8_t key, bool rising, bool falling)
 		if (get_absolute_time() - press_start[key] > 320 * 1000)
 			ripple_anim_run(key, 0, 255, 0, DIR_IN);
 
-		if (key == 0 && first_page) {
+		if (first_page && key == 0) {
 			prev_step();
-		} else if (key == 0) {
-			prev_page();
-		}
-
-		if (key == 11 && !last_page) {
-			next_page();
-		} else if (key != 0) {
-			uint8_t selection = offset + key - 1;
+		} else {
+			uint8_t selection = offset + key;
 			if (selection < item_count) {
 				next_step(selection);
 			}
 		}
+	}
+}
+
+void on_encoder_tick(int last_position, int new_position)
+{
+	if (new_position - last_position > 0) {
+		next_page();
+	} else if (new_position - last_position < 0) {
+		prev_page();
 	}
 }
 
@@ -553,6 +646,7 @@ void build_link_macro(bool rising, bool falling)
 
 	if (falling)
 	{
+		link_build_state.set_encoder_callback(on_encoder_tick);
 		link_build_state.set_oled_draw_function(oled_draw_link_build_state);
 		link_build_state.set_oled_automatic_updates(false);
 

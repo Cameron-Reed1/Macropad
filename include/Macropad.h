@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdio.h>
+#include <pico/stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/i2c.h"
@@ -27,7 +27,7 @@ void gpio_callback(uint gpio, uint32_t events);
 class Macropad
 {
 public:
-    void init(MacropadState* state);
+    void init(MacropadState* state); 
     void init(MacropadState* state, bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma);
 	void run();
 	int get_encoder_position();
@@ -55,6 +55,8 @@ public:
 	Macropad(const Macropad&) = delete;
     static Macropad& get_instance();
 	SH1106_SPI get_oled();
+public:
+	uint8_t kbd_leds = 0;
 private:
 	Macropad();
 	bool m_useTinyUSB = false;
@@ -79,7 +81,7 @@ private:
 	Macro* m_running_macro = nullptr;
     Keys m_keys;
     SH1106_SPI m_oled;
-	MacropadState m_state;
+	MacropadState* m_state;
 	RotaryEncoder m_encoder;
     Adafruit_NeoPixel m_pixels;
 	void init_tinyUSB();
