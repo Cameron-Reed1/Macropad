@@ -107,8 +107,8 @@ void MenuState::OledDraw(SH1106_SPI oled)
     oled.print("Saved value: ");
     oled.print(cfg_saved->brightness); */
 
-	for (int i = NUM_KEYS; i < NUM_KEYS; i++) {
-		if (macropad.get_key_state(i + 1)) {
+	for (int i = 0; i < NUM_KEYS; i++) {
+		if (macropad.get_key_state(i)) {
 			oled.gotoXY((i % 3) * 48, (i / 3) + 4);
 			oled.print("KEY");
 			oled.print(i + 1);

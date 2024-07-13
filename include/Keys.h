@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pico/stdlib.h"
+#include <stdint.h>
 
 class Keys {
 public:
@@ -13,9 +13,9 @@ public:
     bool getKeyFallingEdge(uint8_t keyNum);
 
 private:
-    bool _defaultHigh;
-    uint8_t _keyCount;
-	uint8_t _firstGPIO;
-    uint32_t _values;
-    uint32_t _oldValues;
+    bool m_DefaultHigh;
+	uint8_t m_FirstGPIO;
+    uint8_t m_KeyCount;
+    uint32_t m_Values;
+    uint32_t m_OldValues;
 };

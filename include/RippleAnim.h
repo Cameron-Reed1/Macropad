@@ -1,9 +1,6 @@
 #pragma once
 
-#include "pico/stdlib.h"
-#include "pico/multicore.h"
-#include "Adafruit_NeoPixel.hpp"
-#include "PinDefs.h"
+#include <stdint.h>
 
 #define KEY_COUNT 12
 #define PIXEL_COUNT 12
@@ -20,4 +17,3 @@ enum RippleAnimDir : int8_t {
 void ripple_anim_setup();
 void ripple_anim_set_brightness(uint8_t brightness);
 void ripple_anim_run(uint32_t start_key, uint8_t color_red, uint8_t color_green, uint8_t color_blue, RippleAnimDir direction);
-void ripple_anim_second_core();

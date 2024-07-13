@@ -1,6 +1,7 @@
 #pragma once
 
 #define ENCODER_BUTTON 0
+
 #define KEY1 1
 #define KEY2 2
 #define KEY3 3
@@ -13,14 +14,20 @@
 #define KEY10 10
 #define KEY11 11
 #define KEY12 12
+
 #define LED 13
+
 #define SPEAKER_ENABLE 14
 #define SPEAKER 16
+
 #define ROTA 17
 #define ROTB 18
+
 #define NEOPIXEL 19
+
 #define STEMMA_SDA 20
 #define STEMMA_SCL 21
+
 #define OLED_CS 22
 #define OLED_RESET 23
 #define OLED_DC 24

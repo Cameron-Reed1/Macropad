@@ -4,7 +4,8 @@
 #include "Config.h"
 
 
-int main(void) {
+int main(void)
+{
     Macropad& macropad = Macropad::get_instance();
     MenuState menuState = MenuState();
     CFG* cfg = Config::read();

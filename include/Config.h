@@ -21,6 +21,7 @@ struct CFG {
 };
 
 namespace Config {
+
 CFG* read();
 CFG* get();
 uint8_t getSlot();
@@ -29,5 +30,6 @@ void switchSlot(uint8_t slot);
 void erase();
 void eraseAll();
 void flush();
+
 }
 

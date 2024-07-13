@@ -1,16 +1,22 @@
-#include "RippleAnim.h"
+#include <Adafruit_NeoPixel.hpp>
 #include <pico/util/queue.h>
+#include <pico/multicore.h>
+#include "RippleAnim.h"
+#include "PinDefs.h"
 
-static queue_t comm_q;
 
-struct AnimationData {
+struct AnimationData
+{
 	uint8_t start_key;
 	uint8_t current_frame;
 	RippleAnimDir direction;
 	uint32_t color;
 };
 
-bool animations[PIXEL_COUNT][FRAME_COUNT][PIXEL_COUNT] {
+
+static queue_t comm_q;
+
+static bool animations[PIXEL_COUNT][FRAME_COUNT][PIXEL_COUNT] {
 	{
 		{1, 0, 0,	0, 0, 0,	0, 0, 0,	0, 0, 0},
 		{0, 1, 0,	1, 0, 0,	0, 0, 0,	0, 0, 0},
@@ -109,7 +115,14 @@ bool animations[PIXEL_COUNT][FRAME_COUNT][PIXEL_COUNT] {
 	}
 };
 
-void ripple_anim_setup() {
+
+
+void ripple_anim_second_core();
+
+
+
+void ripple_anim_setup()
+{
 	queue_init(&comm_q, 4, 12);
 	multicore_launch_core1(ripple_anim_second_core);
 }
@@ -120,7 +133,8 @@ void ripple_anim_set_brightness(uint8_t brightness)
 	queue_add_blocking(&comm_q, &data);
 }
 
-void ripple_anim_run(uint32_t start_key, uint8_t color_red, uint8_t color_green, uint8_t color_blue, RippleAnimDir direction) {
+void ripple_anim_run(uint32_t start_key, uint8_t color_red, uint8_t color_green, uint8_t color_blue, RippleAnimDir direction)
+{
 	bool added = queue_try_add(&comm_q, &start_key);
 
 	if (added) {
@@ -129,7 +143,9 @@ void ripple_anim_run(uint32_t start_key, uint8_t color_red, uint8_t color_green,
 	}
 }
 
-void ripple_anim_second_core() {
+
+void ripple_anim_second_core()
+{
 	AnimationData* active_animations[MAX_CONCURRENT_ANIMATIONS] = { nullptr };
 	uint8_t active_animation_count = 0;
 	Adafruit_NeoPixel pixels(PIXEL_COUNT, NEOPIXEL, NEO_GRB + NEO_KHZ800);

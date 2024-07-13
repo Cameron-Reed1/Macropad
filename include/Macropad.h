@@ -77,30 +77,41 @@ private:
 
 private:
 	static Macropad s_Instance;
-	bool m_useTinyUSB = false;
-    bool m_useKeys = false;
-    bool m_useOled = false;
-    bool m_useSpeaker = false;
-    bool m_usePixels = false;
-    bool m_useEncoder = false;
-    bool m_useStemma = false;
-    bool m_updateOled = true;
-	bool m_stateChanged;
-    bool m_encoderPressed;
-	bool m_encoderWasPressed;
-	bool m_consumerReportQueued;
-	bool m_systemReportQueued;
-    uint m_speakerSliceNum;
-    uint m_speakerSliceChan;
-	uint8_t m_keysPressed[6] = { 0 };
-	uint8_t m_timesPressed[6] = { 0 };
-	uint16_t m_consumerReport;
-	uint16_t m_systemReport;
-	Macro* m_running_macro = nullptr;
-    Keys m_keys;
-    SH1106_SPI m_oled;
-	MacropadState* m_state;
-	RotaryEncoder m_encoder;
-    Adafruit_NeoPixel m_pixels;
+
+	MacropadState* m_State;
+
+	bool m_UseTinyUSB = false;
+    bool m_UseKeys = false;
+    bool m_UseOled = false;
+    bool m_UseSpeaker = false;
+    bool m_UsePixels = false;
+    bool m_UseEncoder = false;
+    bool m_UseStemma = false;
+
+    bool m_UpdateOled = true;
+
+	bool m_StateChanged;
+
+    bool m_EncoderPressed;
+	bool m_EncoderWasPressed;
+
+	uint8_t m_KeysPressed[6] = { 0 };
+	uint8_t m_TimesPressed[6] = { 0 };
+
+	uint16_t m_ConsumerReport;
+	bool m_ConsumerReportQueued;
+
+	uint16_t m_SystemReport;
+	bool m_SystemReportQueued;
+
+    uint m_SpeakerSliceNum;
+    uint m_SpeakerSliceChan;
+
+	Macro* m_RunningMacro = nullptr;
+
+    Keys m_Keys;
+    SH1106_SPI m_Oled;
+	RotaryEncoder m_Encoder;
+    Adafruit_NeoPixel m_Pixels;
 };
 

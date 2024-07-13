@@ -47,7 +47,8 @@ void tud_mount_cb(void) { }
 
 void tud_umount_cb(void) { }
 
-void tud_suspend_cb(bool remote_wakeup_en) {
+void tud_suspend_cb(bool remote_wakeup_en)
+{
     suspendedState.wakeup = remote_wakeup_en;
 	suspendedState.set_parent_state(Macropad::get_instance().get_macropad_state());
     suspendedState.Activate();
@@ -55,11 +56,13 @@ void tud_suspend_cb(bool remote_wakeup_en) {
 	suspendedState.set_pixel_color(1, Macropad::get_instance().pixelColor(0, 255 * (remote_wakeup_en ? 1 : 0), 0));
 }
 
-void tud_resume_cb(void) {
+void tud_resume_cb(void)
+{
 	Macropad::get_instance().load_parent_state();
 }
 
-uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen) {
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen)
+{
     (void) instance;
 	(void) report_id;
 	(void) report_type;
@@ -69,7 +72,8 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
     return 0;
 }
 
-void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize) {
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize)
+{
     (void) instance;
 
 	if (report_type == HID_REPORT_TYPE_OUTPUT) {
