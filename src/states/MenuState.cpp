@@ -2,6 +2,7 @@
 #include "states/ConfigState.h"
 #include "states/DebugState.h"
 #include "states/TeamsState.h"
+#include "states/TimerState.h"
 #include "states/LinkState.h"
 
 #include "states/MenuState.h"
@@ -17,12 +18,13 @@ void load_generic_state(bool rising, bool falling);
 void load_config_state(bool rising, bool falling);
 void load_link_state(bool rising, bool falling);
 void load_dev_state(bool rising, bool falling);
+void load_timer_state(bool rising, bool falling);
 
 void oled_draw(SH1106_SPI oled);
 
 static MacropadState menuState(ripple,
         load_teams_state, load_generic_state, load_config_state,
-        load_link_state, load_dev_state, nullptr,
+        load_link_state, load_dev_state, load_timer_state,
         nullptr, nullptr, nullptr,
         nullptr, nullptr, /*load_dummy_state*/ nullptr,
         encoder_volume, toggle_mute, oled_draw);
@@ -77,6 +79,16 @@ void load_dev_state(bool rising, bool falling)
         DebugState::load_state(Macropad::get_instance().get_macropad_state());
     }
 }
+
+void load_timer_state(bool rising, bool falling)
+{
+	(void) rising;
+
+	if (falling) {
+        TimerState::load_state(Macropad::get_instance().get_macropad_state());
+    }
+}
+
 
 void oled_draw(SH1106_SPI oled)
 {
