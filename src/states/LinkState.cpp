@@ -3,101 +3,64 @@
 #include "MacropadState.h"
 #include "Macropad.h"
 
-#include <string>
+#include <string.h>
 
 
-namespace LinkState {
-
-void button_pressed(uint8_t key, bool rising, bool falling);
-
-void encoder_handler(int last_position, int new_position);
-void oled_draw(SH1106_SPI oled);
-
-void reset();
-void cancel();
-void finish();
-void next_page();
-void prev_page();
-void next_step(uint8_t selection);
-void prev_step();
-
-static MacropadState linkState(button_pressed,
-        nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr,
-        encoder_handler, nullptr, oled_draw);
+LinkState::LinkState(MacropadState* parent)
+    : MacropadState(parent) { }
 
 
-enum STEP: uint8_t {
-	COLLECTION_SELECTION = 0,
-	BOOK_SELECTION,
-	CHAPTER_SELECTION
-};
 
 static const char* const base_url = "https://www.churchofjesuschrist.org/study/scriptures/";
-static std::string url;
-static const char* title;
-static const char* const* friendly_names;
-static bool first_page = true;
-static bool last_page = false;
-static int16_t offset = -1;
-static uint8_t item_count;
-static uint8_t selections[3] = { 0 };
-static STEP current_step;
 
-
-void load_state(MacropadState *parent)
+void LinkState::Activate()
 {
-    linkState.set_oled_automatic_updates(false);
-    linkState.set_parent_state(parent);
+    Reset();
 
-    reset();
-
-    Macropad::get_instance().set_macropad_state(&linkState);
+    Macropad::get_instance().set_macropad_state(this);
 }
 
-void button_pressed(uint8_t key, bool rising, bool falling)
+void LinkState::KeyAny(uint8_t key, bool rising, bool falling)
 {
     ripple(key, rising, falling);
 
 	if (falling) {
-		if (first_page && key == 0) {
-			prev_step();
+		if (m_FirstPage && key == 0) {
+			PrevStep();
 		} else {
-			uint8_t selection = offset + key;
-			if (selection < item_count) {
-				next_step(selection);
+			uint8_t selection = m_Offset + key;
+			if (selection < m_ItemCount) {
+				NextStep(selection);
 			}
 		}
 	}
 }
 
-void encoder_handler(int last_position, int new_position)
+void LinkState::EncoderHandler()
 {
-	if (new_position - last_position > 0) {
-		next_page();
-	} else if (new_position - last_position < 0) {
-		prev_page();
+	if (m_EncoderPosition - m_EncoderLastPosition > 0) {
+		NextPage();
+	} else if (m_EncoderPosition - m_EncoderLastPosition < 0) {
+		PrevPage();
 	}
 }
 
-void oled_draw(SH1106_SPI oled)
+void LinkState::OledDraw(SH1106_SPI oled)
 {
 	oled.gotoXY(0, 0);
-	oled.print(title);
+	oled.print(m_Title);
 
-	if (first_page) {
+	if (m_FirstPage) {
 		oled.gotoXY(0, 1);
 		oled.print("Back");
 	}
 
-	for (uint8_t i = first_page ? 1 : 0; i < 12 && i + offset < item_count; i++) {
+	for (uint8_t i = m_FirstPage ? 1 : 0; i < 12 && i + m_Offset < m_ItemCount; i++) {
 		oled.gotoXY((i % 3) * 43, (((i - (i % 3)) / 3) * 2) + 1);
-		if (current_step != CHAPTER_SELECTION) {
-			oled.print(friendly_names[i + offset]);
+		if (m_CurrentStep != CHAPTER_SELECTION) {
+			oled.print(m_FriendlyNames[i + m_Offset]);
         } else {
-			oled.print(i + offset + 1);
+			oled.print(i + m_Offset + 1);
         }
 	}
 }
@@ -546,135 +509,133 @@ static const uint8_t* book_chapter_counts[] = {
 
 
 
-void reset()
+void LinkState::Reset()
 {
-	url = base_url;
-	title = "";
-	friendly_names = collection_friendly_names;
-	offset = -1;
-	item_count = collections_count;
-	first_page = true;
-	last_page = true;
-	current_step = COLLECTION_SELECTION;
+	m_URL = base_url;
+	m_Title = "";
+	m_FriendlyNames = collection_friendly_names;
+	m_Offset = -1;
+	m_ItemCount = collections_count;
+	m_FirstPage = true;
+	m_LastPage = true;
+	m_CurrentStep = COLLECTION_SELECTION;
 }
 
-void cancel()
+void LinkState::Cancel()
 {
 	Macropad::get_instance().load_parent_state();
 }
 
-void finish()
+void LinkState::Finish()
 {
-	url = base_url;
+	m_URL = base_url;
 
-	url += collections[selections[0]];
-	url += '/';
-	url += books_reference[selections[0]][selections[1]];
-	url += '/';
-	url += std::to_string(selections[2]);
+	m_URL += collections[m_Selections[0]];
+	m_URL += '/';
+	m_URL += books_reference[m_Selections[0]][m_Selections[1]];
+	m_URL += '/';
+	m_URL += std::to_string(m_Selections[2]);
 
 	Macropad::get_instance().load_parent_state();
 
-	Macropad::get_instance().type(url.c_str());
+	Macropad::get_instance().type(m_URL.c_str());
 }
 
-void next_page()
+void LinkState::NextPage()
 {
-	if (last_page) {
+	if (m_LastPage) {
 		return;
     }
 
 	Macropad::get_instance().update_oled();
-	offset += 12;
+	m_Offset += 12;
 
-	first_page = false;
-	if (offset + 12 >= item_count) {
-		last_page = true;
+	m_FirstPage = false;
+	if (m_Offset + 12 >= m_ItemCount) {
+		m_LastPage = true;
     }
 }
 
-void prev_page()
+void LinkState::PrevPage()
 {
-	if (first_page) {
+	if (m_FirstPage) {
 		return;
     }
 
-	offset -= 12;
+	m_Offset -= 12;
 
-	last_page = false;
-	if (offset == -1) {
-		first_page = true;
+	m_LastPage = false;
+	if (m_Offset == -1) {
+		m_FirstPage = true;
     }
 
 	Macropad::get_instance().update_oled();
 }
 
-void next_step(uint8_t selection)
+void LinkState::NextStep(uint8_t selection)
 {
-	switch (current_step)
+	switch (m_CurrentStep)
 	{
 		case COLLECTION_SELECTION:
-			title = collection_titles[selection];
-			friendly_names = book_names_reference[selection];
-			offset = -1;
-			item_count = book_counts[selection];
-			first_page = true;
-			last_page = item_count <= 11;
-			current_step = BOOK_SELECTION;
-			selections[0] = selection;
-			if (item_count > 1)
+			m_Title = collection_titles[selection];
+			m_FriendlyNames = book_names_reference[selection];
+			m_Offset = -1;
+			m_ItemCount = book_counts[selection];
+			m_FirstPage = true;
+			m_LastPage = m_ItemCount <= 11;
+			m_CurrentStep = BOOK_SELECTION;
+			m_Selections[0] = selection;
+			if (m_ItemCount > 1)
 				break;
 			selection = 0;
 		case BOOK_SELECTION:
-			title = book_titles_reference[selections[0]][selection];
-			friendly_names = nullptr;
-			offset = -1;
-			item_count = book_chapter_counts[selections[0]][selection];
-			first_page = true;
-			last_page = item_count <= 11;
-			current_step = CHAPTER_SELECTION;
-			selections[1] = selection;
-			if (item_count > 1)
+			m_Title = book_titles_reference[m_Selections[0]][selection];
+			m_FriendlyNames = nullptr;
+			m_Offset = -1;
+			m_ItemCount = book_chapter_counts[m_Selections[0]][selection];
+			m_FirstPage = true;
+			m_LastPage = m_ItemCount <= 11;
+			m_CurrentStep = CHAPTER_SELECTION;
+			m_Selections[1] = selection;
+			if (m_ItemCount > 1)
 				break;
 			selection = 0;
 		case CHAPTER_SELECTION:
-			selections[2] = selection + 1;
-			finish();
+			m_Selections[2] = selection + 1;
+			Finish();
 			break;
 	}
 
 	Macropad::get_instance().update_oled();
 }
 
-void prev_step()
+void LinkState::PrevStep()
 {
-	switch (current_step) {
+	switch (m_CurrentStep) {
 		case CHAPTER_SELECTION:
-			title = collection_titles[selections[0]];
-			friendly_names = book_names_reference[selections[0]];
-			offset = (selections[1] - (selections[1] % 12)) - 1;
-			item_count = book_counts[selections[0]];
-			first_page = offset == -1;
-			last_page = (first_page ? offset + 11 : offset + 12) >= item_count;
-			current_step = BOOK_SELECTION;
-			if (item_count > 1)
+			m_Title = collection_titles[m_Selections[0]];
+			m_FriendlyNames = book_names_reference[m_Selections[0]];
+			m_Offset = (m_Selections[1] - (m_Selections[1] % 12)) - 1;
+			m_ItemCount = book_counts[m_Selections[0]];
+			m_FirstPage = m_Offset == -1;
+			m_LastPage = (m_FirstPage ? m_Offset + 11 : m_Offset + 12) >= m_ItemCount;
+			m_CurrentStep = BOOK_SELECTION;
+			if (m_ItemCount > 1)
 				break;
 		case BOOK_SELECTION:
-			title = "";
-			friendly_names = collection_friendly_names;
-			offset = -1;
-			item_count = collections_count;
-			first_page = true;
-			last_page = true;
-			current_step = COLLECTION_SELECTION;
+			m_Title = "";
+			m_FriendlyNames = collection_friendly_names;
+			m_Offset = -1;
+			m_ItemCount = collections_count;
+			m_FirstPage = true;
+			m_LastPage = true;
+			m_CurrentStep = COLLECTION_SELECTION;
 			break;
 		case COLLECTION_SELECTION:
-			cancel();
+			Cancel();
 			break;
 	}
 
 	Macropad::get_instance().update_oled();
-}
-
 }
 

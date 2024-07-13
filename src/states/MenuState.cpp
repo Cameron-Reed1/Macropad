@@ -11,86 +11,85 @@
 #include "Macropad.h"
 
 
-namespace MenuState {
-
-void load_teams_state(bool rising, bool falling);
-void load_generic_state(bool rising, bool falling);
-void load_config_state(bool rising, bool falling);
-void load_link_state(bool rising, bool falling);
-void load_dev_state(bool rising, bool falling);
-void load_timer_state(bool rising, bool falling);
-
-void oled_draw(SH1106_SPI oled);
-
-static MacropadState menuState(ripple,
-        load_teams_state, load_generic_state, load_config_state,
-        load_link_state, load_dev_state, load_timer_state,
-        nullptr, nullptr, nullptr,
-        nullptr, nullptr, /*load_dummy_state*/ nullptr,
-        encoder_volume, toggle_mute, oled_draw);
-
-void load_state()
+MenuState::MenuState()
+    : MacropadState(nullptr), teamsState(this), genericState(this), configState(this), linkState(this), debugState(this), timerState(this)
 {
-    menuState.set_oled_automatic_updates(true);
-    Macropad::get_instance().set_macropad_state(&menuState);
+    set_oled_automatic_updates(true);
 }
 
-void load_teams_state(bool rising, bool falling)
+
+void MenuState::KeyAny(uint8_t key, bool rising, bool falling)
+{
+    ripple(key, rising, falling);
+}
+
+void MenuState::Key1(bool rising, bool falling)
 {
 	(void) rising;
 
 	if (falling) {
-        TeamsState::load_state(Macropad::get_instance().get_macropad_state());
+        teamsState.Activate();
     }
 }
 
-void load_generic_state(bool rising, bool falling)
+void MenuState::Key2(bool rising, bool falling)
 {
 	(void) rising;
 
 	if (falling) {
-        GenericState::load_state(Macropad::get_instance().get_macropad_state());
+        genericState.Activate();
     }
 }
 
-void load_config_state(bool rising, bool falling)
+void MenuState::Key3(bool rising, bool falling)
 {
 	(void) rising;
 
 	if (falling) {
-        ConfigState::load_state(Macropad::get_instance().get_macropad_state());
+        configState.Activate();
 	}
 }
 
-void load_link_state(bool rising, bool falling)
+void MenuState::Key4(bool rising, bool falling)
 {
 	(void) rising;
 
 	if (falling) {
-        LinkState::load_state(Macropad::get_instance().get_macropad_state());
+        linkState.Activate();
 	}
 }
 
-void load_dev_state(bool rising, bool falling)
+void MenuState::Key5(bool rising, bool falling)
 {
 	(void) rising;
 
 	if (falling) {
-        DebugState::load_state(Macropad::get_instance().get_macropad_state());
+        debugState.Activate();
     }
 }
 
-void load_timer_state(bool rising, bool falling)
+void MenuState::Key6(bool rising, bool falling)
 {
 	(void) rising;
 
 	if (falling) {
-        TimerState::load_state(Macropad::get_instance().get_macropad_state());
+        timerState.Activate();
     }
 }
 
 
-void oled_draw(SH1106_SPI oled)
+void MenuState::EncoderHandler()
+{
+    encoder_volume(m_EncoderLastPosition, m_EncoderPosition);
+}
+
+void MenuState::EncoderPress(bool rising, bool falling)
+{
+    toggle_mute(rising, falling);
+}
+
+
+void MenuState::OledDraw(SH1106_SPI oled)
 {
     Macropad& macropad = Macropad::get_instance();
 
@@ -115,7 +114,5 @@ void oled_draw(SH1106_SPI oled)
 			oled.print(i + 1);
 		}
 	}
-}
-
 }
 

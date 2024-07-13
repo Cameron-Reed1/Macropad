@@ -4,44 +4,37 @@
 #include "Macropad.h"
 
 
-namespace PowerOffState {
+PowerOffState::PowerOffState(MacropadState* parent)
+    : MacropadState(parent) { }
 
-void poweroff(bool rising, bool falling);
 
-void oled_draw(SH1106_SPI oled);
-
-static MacropadState powerOffState(ripple,
-        return_to_parent_state, return_to_parent_state, return_to_parent_state,
-        return_to_parent_state, return_to_parent_state, return_to_parent_state,
-        return_to_parent_state, return_to_parent_state, return_to_parent_state,
-        return_to_parent_state, return_to_parent_state, poweroff,
-        nullptr, nullptr, oled_draw);
-
-void load_state(MacropadState* parent)
+void PowerOffState::KeyAny(uint8_t key, bool rising, bool falling)
 {
-    powerOffState.set_parent_state(parent);
-    powerOffState.set_oled_automatic_updates(false);
-    Macropad::get_instance().set_macropad_state(&powerOffState);
+    if (key != 12) {
+        return_to_parent_state(rising, falling);
+    }
+
+    ripple(key, rising, falling);
 }
 
-void poweroff(bool rising, bool falling)
+void PowerOffState::Key12(bool rising, bool falling)
 {
+    Macropad& macropad = Macropad::get_instance();
     if (rising) {
-        Macropad::get_instance().press_system_key(HID_USAGE_DESKTOP_SYSTEM_POWER_DOWN);
+        macropad.press_system_key(HID_USAGE_DESKTOP_SYSTEM_POWER_DOWN);
     } else if (falling) {
-        Macropad::get_instance().release_system_keys();
-        Macropad::get_instance().load_parent_state();
+        macropad.release_system_keys();
+        macropad.load_parent_state();
     }
 }
 
-void oled_draw(SH1106_SPI oled)
+
+void PowerOffState::OledDraw(SH1106_SPI oled)
 {
 	oled.gotoXY(0, 0);
 	oled.print("Are you sure?");
 
 	oled.gotoXY(86, 5);
 	oled.print("Yes");
-}
-
 }
 

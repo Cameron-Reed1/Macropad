@@ -11,44 +11,46 @@
 #include "PinDefs.h"
 
 uint8_t const ascii_to_keycode_conv[128][2] =  { HID_ASCII_TO_KEYCODE };
-Macropad Macropad::s_instance;
+Macropad Macropad::s_Instance;
 
 Macropad::Macropad()
-: m_keys(NUM_KEYS, true), m_oled(SPI_PORT), m_state(new MacropadState()), m_encoder(ROTA, ROTB, RotaryEncoder::LatchMode::FOUR3), m_pixels(NUM_PIXELS, NEOPIXEL, NEO_GRB + NEO_KHZ800)
+: m_keys(NUM_KEYS, true), m_oled(SPI_PORT), m_state(nullptr), m_encoder(ROTA, ROTB, RotaryEncoder::LatchMode::FOUR3), m_pixels(NUM_PIXELS, NEOPIXEL, NEO_GRB + NEO_KHZ800)
 {}
 
 Macropad& Macropad::get_instance()
 {
-	return s_instance;
-}
-
-void Macropad::init(MacropadState* state)
-{
-    this->init(state, true, true, true, true, true, true, true);
+	return s_Instance;
 }
 
 void Macropad::init(bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma)
 {
-    this->init(nullptr, init_tinyUSB, init_keys, init_oled, init_speaker, init_pixels, init_encoder, init_stemma);
-}
-
-void Macropad::init(MacropadState* state, bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma)
-{
-	m_state = state;
-	if (init_tinyUSB)
+	if (init_tinyUSB) {
 		this->init_tinyUSB();
-    if (init_keys)
+    }
+
+    if (init_keys) {
         this->init_keys();
-    if (init_speaker)
+    }
+
+    if (init_speaker) {
         this->init_speaker();
-    if (init_encoder)
+    }
+
+    if (init_encoder) {
         this->init_encoder();
-    if (init_oled)
+    }
+
+    if (init_oled) {
         this->init_oled();
-    if (init_pixels)
+    }
+
+    if (init_pixels) {
         this->init_pixels();
-    if (init_stemma)
+    }
+
+    if (init_stemma) {
         this->init_stemma();
+    }
 }
 
 void Macropad::init_tinyUSB()
@@ -232,115 +234,150 @@ void Macropad::run()
 	m_stateChanged = false;
 
     if (m_useEncoder) {
-        m_state->set_encoder_position(m_encoder.getPosition());
-        m_encoderPressed = !gpio_get(ENCODER_BUTTON);
-		encoderCallback encoderCallback = m_state->get_encoder_callback();
-		if (encoderCallback != nullptr) {
-			encoderCallback(m_state->get_encoder_last_postition(), m_state->get_encoder_position());
-		}
-		if (m_encoderPressed != m_encoderWasPressed && !m_stateChanged) {
-			encoderPressedCallback callback = m_state->get_encoder_pressed_callback();
-			if (callback != nullptr) {
-				callback(m_encoderPressed, m_encoderWasPressed);
-			}
-			m_updateOled = m_updateOled || m_state->get_update_on_encoder_press();
-		}
-        if (m_state->get_encoder_position() != m_state->get_encoder_last_postition() && !m_stateChanged) {
-            m_updateOled = m_updateOled || m_state->get_update_on_encoder_move();
-        }
-		m_encoderWasPressed = m_encoderPressed;
+        run_encoder();
     }
 
     if (m_useKeys) {
-        m_keys.update();
-        if (m_keys.haveChanged()) {
-            m_updateOled = m_updateOled || m_state->get_update_on_key_press();
-            keyCallbackGeneric genericCallback = m_state->get_key_generic_callback();
-            for (uint8_t i = 0; i < NUM_KEYS; i++) {
-                if (m_keys.getKeyRisingEdge(i + 1) || m_keys.getKeyFallingEdge(i + 1)) {
-					keyCallback keyCallback = m_state->get_key_callback(i);
-                    if (keyCallback != nullptr && !m_stateChanged)
-                        keyCallback(m_keys.getKeyRisingEdge(i + 1), m_keys.getKeyFallingEdge(i + 1));
-                    if (genericCallback != nullptr && !m_stateChanged)
-                        genericCallback(i, m_keys.getKeyRisingEdge(i + 1), m_keys.getKeyFallingEdge(i + 1));
-                }
-            }
-        }
+        run_keys();
     }
 
     if (m_usePixels && m_pixels.canShow()) {
-		for (uint8_t i = 0; i < NUM_PIXELS; i++) {
-			m_pixels.setPixelColor(i, m_state->get_pixel_color(i));
-		}
-		if (m_pixels.getBrightness() != m_state->get_pixels_brightness())
-			m_pixels.setBrightness(m_state->get_pixels_brightness());
-        m_pixels.show();
+        run_pixels();
 	}
 
     if (m_useOled && m_updateOled) {
-        m_oled.clear();
-		oledDraw oledDrawFunction = m_state->get_oled_draw_function();
-		if (oledDrawFunction != nullptr)
-			oledDrawFunction(m_oled);
-        m_updateOled = false;
+        run_oled();
 	}
 
     if (m_useTinyUSB) {
-		tud_task();
-		while (!tud_hid_ready() && (m_keysPressed[0] != HID_KEY_NONE || m_consumerReportQueued || m_systemReportQueued || m_running_macro) && tud_mounted())
-			tud_task();
-		if (tud_hid_ready()) {
-			if (m_running_macro) {
-				if (m_keysPressed[0] != HID_KEY_NONE) {
-					for (uint8_t i = 0; i < 6; i++) {
-						m_keysPressed[i] = HID_KEY_NONE;
-						m_timesPressed[i] = 0;
-					}
-					tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_keysPressed);
-				} else {
-					MacroStep& step = m_running_macro->getStep();
-					uint8_t* keys;
-					switch (step.m_step_type) {
-						case TYPE_KEY_PRESS:
-							keys = reinterpret_cast<uint8_t*>(&step.m_data);
-							tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keys);
-							while (!tud_hid_ready())
-								tud_task();
-							tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_keysPressed);
-							m_running_macro->nextStep();
-							break;
-						case TYPE_TYPE_STRING:
-							this->type(reinterpret_cast<char*>(step.m_data));
-							m_running_macro->nextStep();
-							break;
-						case TYPE_SLEEP:
-							static bool sleep_started = false;
-							static absolute_time_t sleep_start_time;
-							if (!sleep_started) {
-								sleep_start_time = get_absolute_time();
-								sleep_started = true;
-							}
-							if (absolute_time_diff_us(sleep_start_time, get_absolute_time()) >= step.m_data * 1000) {
-								sleep_started = false;
-								m_running_macro->nextStep();
-							}
-					}
-					if (m_running_macro->finished())
-						m_running_macro = nullptr;
-				}
-			} else if (m_systemReportQueued) {
-				tud_hid_report(REPORT_ID_SYSTEM_CONTROL, &m_systemReport, sizeof(m_systemReport));
-				m_systemReportQueued = false;
-			} else if (m_consumerReportQueued) {
-				tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &m_consumerReport, sizeof(m_consumerReport));
-				m_consumerReportQueued = false;
-			} else {
-				tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_keysPressed);
-			}
-		}
+        run_tinyUSB();
 	}
 
 	sleep_ms(10);
+}
+
+void Macropad::run_encoder()
+{
+    m_state->set_encoder_position(m_encoder.getPosition());
+    m_encoderPressed = !gpio_get(ENCODER_BUTTON);
+    m_state->EncoderHandler();
+
+    if (m_encoderPressed != m_encoderWasPressed && !m_stateChanged) {
+        m_state->EncoderPress(m_encoderPressed, m_encoderWasPressed);
+        m_updateOled = m_updateOled || m_state->get_update_on_encoder_press();
+    }
+
+    if (m_state->get_encoder_position() != m_state->get_encoder_last_postition() && !m_stateChanged) {
+        m_updateOled = m_updateOled || m_state->get_update_on_encoder_move();
+    }
+
+    m_encoderWasPressed = m_encoderPressed;
+}
+
+void Macropad::run_keys()
+{
+    m_keys.update();
+
+    if (m_keys.haveChanged()) {
+        m_updateOled = m_updateOled || m_state->get_update_on_key_press();
+
+        for (uint8_t i = 0; i < NUM_KEYS; i++) {
+            bool rising = m_keys.getKeyRisingEdge(i + 1);
+            bool falling = m_keys.getKeyFallingEdge(i + 1);
+
+            if (rising || falling) {
+                m_state->Key(i, rising, falling);
+            }
+        }
+    }
+}
+
+void Macropad::run_pixels()
+{
+    for (uint8_t i = 0; i < NUM_PIXELS; i++) {
+        m_pixels.setPixelColor(i, m_state->get_pixel_color(i));
+    }
+
+    if (m_pixels.getBrightness() != m_state->get_pixels_brightness()) {
+        m_pixels.setBrightness(m_state->get_pixels_brightness());
+    }
+
+    m_pixels.show();
+}
+
+void Macropad::run_oled()
+{
+    m_oled.clear();
+    m_state->OledDraw(m_oled);
+    m_updateOled = false;
+}
+
+void Macropad::run_tinyUSB()
+{
+    tud_task();
+    while (!tud_hid_ready() && (m_keysPressed[0] != HID_KEY_NONE || m_consumerReportQueued || m_systemReportQueued || m_running_macro) && tud_mounted()) {
+        tud_task();
+    }
+
+    if (tud_hid_ready()) {
+        if (m_running_macro) {
+            run_macroStep();
+        } else if (m_systemReportQueued) {
+            tud_hid_report(REPORT_ID_SYSTEM_CONTROL, &m_systemReport, sizeof(m_systemReport));
+            m_systemReportQueued = false;
+        } else if (m_consumerReportQueued) {
+            tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &m_consumerReport, sizeof(m_consumerReport));
+            m_consumerReportQueued = false;
+        } else {
+            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_keysPressed);
+        }
+    }
+}
+
+void Macropad::run_macroStep()
+{
+    // Clear all pressed keys
+    if (m_keysPressed[0] != HID_KEY_NONE) {
+        for (uint8_t i = 0; i < 6; i++) {
+            m_keysPressed[i] = HID_KEY_NONE;
+            m_timesPressed[i] = 0;
+        }
+        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_keysPressed);
+        return;
+    }
+
+    MacroStep& step = m_running_macro->getStep();
+    uint8_t* keys;
+    switch (step.m_step_type) {
+        case TYPE_KEY_PRESS:
+            keys = reinterpret_cast<uint8_t*>(&step.m_data);
+            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keys);
+            while (!tud_hid_ready()) {
+                tud_task();
+            }
+            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_keysPressed);
+            m_running_macro->nextStep();
+            break;
+        case TYPE_TYPE_STRING:
+            this->type(reinterpret_cast<char*>(step.m_data));
+            m_running_macro->nextStep();
+            break;
+        case TYPE_SLEEP:
+            static bool sleep_started = false;
+            static absolute_time_t sleep_start_time;
+            if (!sleep_started) {
+                sleep_start_time = get_absolute_time();
+                sleep_started = true;
+            }
+            if (absolute_time_diff_us(sleep_start_time, get_absolute_time()) >= step.m_data * 1000) {
+                sleep_started = false;
+                m_running_macro->nextStep();
+            }
+    }
+
+    if (m_running_macro->finished()) {
+        m_running_macro = nullptr;
+    }
 }
 
 void Macropad::encoder_tick()
@@ -353,29 +390,6 @@ void Macropad::update_oled()
 	if (!m_useOled)
 		return;
 	m_updateOled = true;
-}
-
-void Macropad::set_oled_automatic_updates(bool enable /* = true */)
-{
-	this->set_oled_automatic_updates(enable, enable, enable);
-}
-void Macropad::set_oled_automatic_updates(bool on_encoder_move, bool on_encoder_press, bool on_key_press)
-{
-	m_state->set_oled_automatic_updates(on_encoder_move, on_encoder_press, on_key_press);
-}
-
-void Macropad::set_key_function(uint8_t key, keyCallback newFunc)
-{
-	if (!m_useKeys)
-		return;
-	m_state->set_key_callback(key, newFunc);
-}
-
-void Macropad::set_general_key_function(keyCallbackGeneric newFunc)
-{
-	if (!m_useKeys)
-		return;
-    m_state->set_key_generic_callback(newFunc);
 }
 
 void Macropad::set_macropad_state(MacropadState* newState)
@@ -393,22 +407,15 @@ void Macropad::set_macropad_state(MacropadState* newState)
 
 void Macropad::load_parent_state()
 {
-	if (m_state->get_parent_state() != nullptr)
-		this->set_macropad_state(m_state->get_parent_state());
+    MacropadState* parent = m_state->get_parent_state();
+	if (parent != nullptr) {
+		this->set_macropad_state(parent);
+    }
 }
 
-void Macropad::set_pixel_color(uint8_t pixel, uint8_t red, uint8_t green, uint8_t blue)
+uint32_t Macropad::pixelColor(uint8_t red, uint8_t green, uint8_t blue)
 {
-	if (!m_usePixels)
-		return;
-	m_state->set_pixel_color(pixel, m_pixels.Color(red, green, blue));
-}
-
-void Macropad::set_pixels_brightness(uint8_t brightness)
-{
-	if (!m_usePixels)
-		return;
-	m_state->set_pixels_brightness(brightness);
+    return m_pixels.Color(red, green, blue);
 }
 
 void Macropad::type(const char *str)
@@ -515,7 +522,7 @@ bool Macropad::release_system_keys()
 	return true;
 }
 
-bool Macropad::run_macro(Macro* macro)
+bool Macropad::play_macro(Macro* macro)
 {
 	if (m_running_macro)
 		return false;
@@ -525,13 +532,10 @@ bool Macropad::run_macro(Macro* macro)
 }
 
 
-void gpio_callback(uint gpio, uint32_t events) {
+void Macropad::gpio_callback(uint gpio, uint32_t events)
+{
     (void) gpio;
     (void) events;
     Macropad::get_instance().encoder_tick();
 }
 
-SH1106_SPI Macropad::get_oled()
-{
-	return m_oled;
-}

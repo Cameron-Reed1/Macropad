@@ -10,14 +10,37 @@
 #include "Macropad.h"
 #include "PinDefs.h"
 
-MacropadState suspendedState = MacropadState();
+class SuspendedState: public MacropadState
+{
+public:
+    SuspendedState();
 
-void resume(uint8_t key, bool rising, bool falling) {
+    void KeyAny(uint8_t key, bool rising, bool falling);
+
+public:
+    bool wakeup;
+};
+
+SuspendedState::SuspendedState()
+    : MacropadState(nullptr) { }
+
+void SuspendedState::KeyAny(uint8_t key, bool rising, bool falling)
+{
+    if (falling && wakeup) {
+        tud_remote_wakeup();
+    }
+}
+
+static SuspendedState suspendedState = SuspendedState();
+
+void resume(uint8_t key, bool rising, bool falling)
+{
 	(void) key;
 	(void) rising;
 
-	if (falling)
+	if (falling) {
 		tud_remote_wakeup();
+    }
 }
 
 void tud_mount_cb(void) { }
@@ -25,13 +48,11 @@ void tud_mount_cb(void) { }
 void tud_umount_cb(void) { }
 
 void tud_suspend_cb(bool remote_wakeup_en) {
-    if (remote_wakeup_en) {
-		suspendedState.set_key_generic_callback(resume);
-	}
+    suspendedState.wakeup = remote_wakeup_en;
 	suspendedState.set_parent_state(Macropad::get_instance().get_macropad_state());
-	Macropad::get_instance().set_macropad_state(&suspendedState);
-	Macropad::get_instance().set_pixels_brightness(5);
-	Macropad::get_instance().set_pixel_color(1, 0, 255 * remote_wakeup_en, 0);
+    suspendedState.Activate();
+    suspendedState.set_pixels_brightness(5);
+	suspendedState.set_pixel_color(1, Macropad::get_instance().pixelColor(0, 255 * (remote_wakeup_en ? 1 : 0), 0));
 }
 
 void tud_resume_cb(void) {

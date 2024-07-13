@@ -1,34 +1,28 @@
 #include <pico/bootrom.h>
+#include <stdint.h>
 
 #include "states/DebugState.h"
 #include "states/common.h"
 #include "MacropadState.h"
-#include "Macropad.h"
 #include "PinDefs.h"
 #include "Config.h"
 
-namespace DebugState {
 
-void enterBootloader(bool rising, bool falling);
-void eraseConfig(bool rising, bool falling);
+DebugState::DebugState(MacropadState* parent)
+    : MacropadState(parent) { }
 
-void oled_draw(SH1106_SPI oled);
 
-static MacropadState debugState(ripple,
-        return_to_parent_state, enterBootloader, eraseConfig,
-        nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr,
-        nullptr, nullptr, oled_draw);
-
-void load_state(MacropadState* parent)
+void DebugState::KeyAny(uint8_t key, bool rising, bool falling)
 {
-    debugState.set_parent_state(parent);
-    debugState.set_oled_automatic_updates(false);
-    Macropad::get_instance().set_macropad_state(&debugState);
+    ripple(key, rising, falling);
 }
 
-void enterBootloader(bool rising, bool falling)
+void DebugState::Key1(bool rising, bool falling)
+{
+    return_to_parent_state(rising, falling);
+}
+
+void DebugState::Key2(bool rising, bool falling)
 {
 	(void) rising;
 	(void) falling;
@@ -36,7 +30,7 @@ void enterBootloader(bool rising, bool falling)
 	reset_usb_boot(1 << LED, 0);
 }
 
-void eraseConfig(bool rising, bool falling)
+void DebugState::Key3(bool rising, bool falling)
 {
     (void) falling;
 
@@ -45,7 +39,8 @@ void eraseConfig(bool rising, bool falling)
     }
 }
 
-void oled_draw(SH1106_SPI oled)
+
+void DebugState::OledDraw(SH1106_SPI oled)
 {
 	const char* const labels[4][3] = {
 		{"Back", "Boot", "Erase"},
@@ -61,6 +56,4 @@ void oled_draw(SH1106_SPI oled)
 		}
 	}
 }
-
-} // namespace DebugState
 

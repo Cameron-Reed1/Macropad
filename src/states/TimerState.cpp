@@ -2,46 +2,81 @@
 #include "class/hid/hid.h"
 #include "states/common.h"
 #include "MacropadState.h"
-#include "Macropad.h"
 
 
-namespace TimerState {
+TimerState::TimerState(MacropadState* parent)
+    : MacropadState(parent) { }
 
-void oled_draw(SH1106_SPI oled);
-
-static MacropadState timerState(ripple,
-        return_to_parent_state, press_keys<HID_KEY_ALT_LEFT, HID_KEY_F5>, press_keys<HID_KEY_ALT_LEFT, HID_KEY_F6>,
-        press_keys<HID_KEY_ALT_LEFT, HID_KEY_F7>, press_keys<HID_KEY_ALT_LEFT, HID_KEY_F8>, press_keys<HID_KEY_ALT_LEFT, HID_KEY_F9>,
-        press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_F5>, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_F7>, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_F8>,
-        press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_F6>, nullptr, nullptr,
-        nullptr, nullptr, oled_draw);
-
-
-void load_state(MacropadState* parent)
+void TimerState::KeyAny(uint8_t key, bool rising, bool falling)
 {
-    timerState.set_parent_state(parent);
-    timerState.set_oled_automatic_updates(false);
+    ripple(key, rising, falling);
+}
 
-    Macropad::get_instance().set_macropad_state(&timerState);
+void TimerState::Key1(bool rising, bool falling)
+{
+    return_to_parent_state(rising, falling);
+}
+
+void TimerState::Key2(bool rising, bool falling)
+{
+    press_keys<HID_KEY_ALT_LEFT, HID_KEY_F5>(rising, falling);
+}
+
+void TimerState::Key3(bool rising, bool falling)
+{
+    press_keys<HID_KEY_ALT_LEFT, HID_KEY_F6>(rising, falling);
+}
+
+void TimerState::Key4(bool rising, bool falling)
+{
+    press_keys<HID_KEY_ALT_LEFT, HID_KEY_F7>(rising, falling);
+}
+
+void TimerState::Key5(bool rising, bool falling)
+{
+    press_keys<HID_KEY_ALT_LEFT, HID_KEY_F8>(rising, falling);
+}
+
+void TimerState::Key6(bool rising, bool falling)
+{
+    press_keys<HID_KEY_ALT_LEFT, HID_KEY_F9>(rising, falling);
+}
+
+void TimerState::Key7(bool rising, bool falling)
+{
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_F5>(rising, falling);
+}
+
+void TimerState::Key8(bool rising, bool falling)
+{
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_F7>(rising, falling);
+}
+
+void TimerState::Key9(bool rising, bool falling)
+{
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_F8>(rising, falling);
+}
+
+void TimerState::Key10(bool rising, bool falling)
+{
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_F6>(rising, falling);
 }
 
 
-void oled_draw(SH1106_SPI oled)
+void TimerState::OledDraw(SH1106_SPI oled)
 {
-	const char* const labels[4][3] = {
-		{"Back", "1min", "5min"},
-		{"15min", "1hr", "Clear"},
-		{"Start", "Pause", "Resume"},
-		{"Clear", "", ""},
-	};
+    const char* const labels[4][3] = {
+        {"Back", "1min", "5min"},
+        {"15min", "1hr", "Clear"},
+        {"Start", "Pause", "Resume"},
+        {"Clear", "", ""},
+    };
 
-	for (uint8_t y = 0; y < 4; y++) {
-		for (uint8_t x = 0; x < 3; x++) {
-			oled.gotoXY(x * 43, y * 2);
-			oled.print(labels[y][x]);
-		}
-	}
+    for (uint8_t y = 0; y < 4; y++) {
+        for (uint8_t x = 0; x < 3; x++) {
+            oled.gotoXY(x * 43, y * 2);
+            oled.print(labels[y][x]);
+        }
+    }
 }
-
-} // namespace TimerState
 

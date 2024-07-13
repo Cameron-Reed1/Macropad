@@ -4,29 +4,21 @@
 #include "Macropad.h"
 
 
-namespace TeamsState {
+TeamsState::TeamsState(MacropadState* parent)
+    : MacropadState(parent) { }
 
-void blur(bool rising, bool falling);
 
-void encoder_handler(int last_position, int new_position);
-void encoder_pressed(bool rising, bool falling);
-void oled_draw_teams_state(SH1106_SPI oled);
-
-static MacropadState teamsState(ripple,
-        return_to_parent_state, nullptr, nullptr,
-        nullptr, nullptr, nullptr,
-        blur, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_H>, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_K>,
-        press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SPACE>, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_M>, press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_O>,
-        encoder_volume, toggle_mute, oled_draw_teams_state);
-
-void load_state(MacropadState* parent)
+void TeamsState::KeyAny(uint8_t key, bool rising, bool falling)
 {
-    teamsState.set_parent_state(parent);
-    teamsState.set_oled_automatic_updates(false);
-    Macropad::get_instance().set_macropad_state(&teamsState);
+    ripple(key, rising, falling);
 }
 
-void blur(bool rising, bool falling)
+void TeamsState::Key1(bool rising, bool falling)
+{
+    return_to_parent_state(rising, falling);
+}
+
+void TeamsState::Key7(bool rising, bool falling)
 {
 	(void) falling;
 
@@ -37,35 +29,48 @@ void blur(bool rising, bool falling)
 	}
 
 	if (rising) {
-        Macropad::get_instance().run_macro(macro);
+        Macropad::get_instance().play_macro(macro);
     }
 }
 
-void encoder_handler(int last_position, int new_position)
+void TeamsState::Key8(bool rising, bool falling)
 {
-	static bool key_pressed = false;
-	if (new_position - last_position > 0) {
-        Macropad::get_instance().press_consumer_key(HID_USAGE_CONSUMER_VOLUME_INCREMENT);
-		key_pressed = true;
-	} else if (new_position - last_position < 0) {
-		Macropad::get_instance().press_consumer_key(HID_USAGE_CONSUMER_VOLUME_DECREMENT);
-		key_pressed = true;
-	} else if (key_pressed) {
-        Macropad::get_instance().release_consumer_keys();
-		key_pressed = false;
-	}
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_H>(rising, falling);
 }
 
-void encoder_pressed(bool rising, bool falling)
+void TeamsState::Key9(bool rising, bool falling)
 {
-	if (rising) {
-        Macropad::get_instance().press_consumer_key(HID_USAGE_CONSUMER_MUTE);
-	} else if (falling) {
-        Macropad::get_instance().release_consumer_keys();
-	}
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_K>(rising, falling);
 }
 
-void oled_draw_teams_state(SH1106_SPI oled)
+void TeamsState::Key10(bool rising, bool falling)
+{
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SPACE>(rising, falling);
+}
+
+void TeamsState::Key11(bool rising, bool falling)
+{
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_M>(rising, falling);
+}
+
+void TeamsState::Key12(bool rising, bool falling)
+{
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_O>(rising, falling);
+}
+
+
+void TeamsState::EncoderHandler()
+{
+    encoder_volume(m_EncoderLastPosition, m_EncoderPosition);
+}
+
+void TeamsState::EncoderPress(bool rising, bool falling)
+{
+    toggle_mute(rising, falling);
+}
+
+
+void TeamsState::OledDraw(SH1106_SPI oled)
 {
 	const char* const functions[4][3] = {
 		{"Back", "", ""},
@@ -80,7 +85,5 @@ void oled_draw_teams_state(SH1106_SPI oled)
 			oled.print(functions[y][x]);
 		}
 	}
-}
-
 }
 
