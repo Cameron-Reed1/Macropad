@@ -48,8 +48,12 @@ target_link_libraries(Macropad
         tinyusb_board
         pico_multicore
         pico_bootrom
+        pico_usb_reset_interface
+        #        pico_bootsel_via_double_reset
         )
 
 target_include_directories(Macropad PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include)
 
 pico_add_extra_outputs(Macropad)
+
+install(CODE "execute_process(COMMAND ${CMAKE_SOURCE_DIR}/install.sh \"${CMAKE_BINARY_DIR}\")")

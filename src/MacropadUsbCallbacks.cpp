@@ -1,7 +1,14 @@
 #include <tusb.h>
 #include <bsp/board.h>
+#include <tusb_types.h>
+#include <device/usbd.h>
+#include <pico/bootrom.h>
 #include "usb_descriptors.h"
+#include <hardware/watchdog.h>
+#include <pico/usb_reset_interface.h>
+
 #include "Macropad.h"
+#include "PinDefs.h"
 
 MacropadState suspendedState = MacropadState();
 
@@ -52,3 +59,27 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 		}
 	}
 }
+
+
+// Copied from https://github.com/raspberrypi/pico-sdk/src/rp2_common/pico_stdio_usb/reset_interface.c
+bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, const tusb_control_request_t* request)
+{
+    (void) rhport;
+
+    // nothing to do with DATA & ACK stage
+    if (stage != CONTROL_STAGE_SETUP) return true;
+
+
+    if (request->bRequest == RESET_REQUEST_BOOTSEL) {
+        reset_usb_boot(1u << LED, request->wValue & 0x7f);
+        // does not return, otherwise we'd return true
+    }
+
+    if (request->bRequest == RESET_REQUEST_FLASH) {
+        watchdog_reboot(0, 0, 100);
+        return true;
+    }
+
+    return false;
+}
+

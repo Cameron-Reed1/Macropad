@@ -23,7 +23,10 @@
  *
  */
 
-#include "tusb.h"
+#include <tusb.h>
+#include <device/usbd.h>
+#include <pico/usb_reset_interface.h>
+
 #include "usb_descriptors.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
@@ -36,7 +39,8 @@
 #define USB_PID           (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
                            _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4) )
 
-#define USB_VID   0xCafe
+#define USB_VID   0x2E8A
+#define USB_PID   0x000A
 #define USB_BCD   0x0200
 
 //--------------------------------------------------------------------+
@@ -99,12 +103,19 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
 enum
 {
   ITF_NUM_HID,
+  ITF_NUM_VENDOR,
   ITF_NUM_TOTAL
 };
 
-#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
+#define TUD_RPI_RESET_DESC_LEN  9
+#define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
 
-#define EPNUM_HID   0x81
+#define EPNUM_HID         0x81
+#define EPNUM_VENDOR_IN   0x82
+#define EPNUM_VENDOR_OUT  0x82
+
+#define TUD_RPI_RESET_DESCRIPTOR(_itfnum, _stridx) \
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, RESET_INTERFACE_SUBCLASS, RESET_INTERFACE_PROTOCOL, _stridx
 
 uint8_t const desc_configuration[] =
 {
@@ -112,7 +123,9 @@ uint8_t const desc_configuration[] =
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
   // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
-  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5)
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 4, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5),
+  // TUD_VENDOR_DESCRIPTOR(ITF_NUM_VENDOR, 5, 1, 0, 1),
+  TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_VENDOR, 5),
 };
 
 #if TUD_OPT_HIGH_SPEED
@@ -185,6 +198,8 @@ char const* string_desc_arr [] =
   "TinyUSB",                     // 1: Manufacturer
   "TinyUSB Device",              // 2: Product
   "123456",                      // 3: Serials, should use chip ID
+  "Macropad HID",                // 4: HID class string
+  "Reset Interface",             // 5: Vendor class string
 };
 
 static uint16_t _desc_str[32];
