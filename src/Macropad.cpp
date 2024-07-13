@@ -1,5 +1,14 @@
-#include "Macropad.h"
+#include <pico/stdlib.h>
 #include <pico/binary_info.h>
+#include <hardware/pwm.h>
+#include <hardware/i2c.h>
+#include <hardware/spi.h>
+#include <hardware/watchdog.h>
+#include <tusb.h>
+#include <bsp/board.h>
+#include "usb_descriptors.h"
+#include "Macropad.h"
+#include "PinDefs.h"
 
 uint8_t const ascii_to_keycode_conv[128][2] =  { HID_ASCII_TO_KEYCODE };
 Macropad Macropad::s_instance;
@@ -249,11 +258,11 @@ void Macropad::run()
             keyCallbackGeneric genericCallback = m_state->get_key_generic_callback();
             for (uint8_t i = 0; i < NUM_KEYS; i++) {
                 if (m_keys.getKeyRisingEdge(i + 1) || m_keys.getKeyFallingEdge(i + 1)) {
-                    if (genericCallback != nullptr && !m_stateChanged)
-                        genericCallback(i, m_keys.getKeyRisingEdge(i + 1), m_keys.getKeyFallingEdge(i + 1));
 					keyCallback keyCallback = m_state->get_key_callback(i);
                     if (keyCallback != nullptr && !m_stateChanged)
                         keyCallback(m_keys.getKeyRisingEdge(i + 1), m_keys.getKeyFallingEdge(i + 1));
+                    if (genericCallback != nullptr && !m_stateChanged)
+                        genericCallback(i, m_keys.getKeyRisingEdge(i + 1), m_keys.getKeyFallingEdge(i + 1));
                 }
             }
         }

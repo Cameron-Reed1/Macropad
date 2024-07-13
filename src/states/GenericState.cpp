@@ -78,7 +78,7 @@ void confirm_poweroff(bool rising, bool falling)
 
 void oled_draw(SH1106_SPI oled)
 {
-	const char* const functions[8][3] = {
+	const char* const labels[8][3] = {
 		{"Back", "Lock", "Desktop"},
 		{"","",""},
 		{"Copy", "Paste", "Select"},
@@ -92,7 +92,7 @@ void oled_draw(SH1106_SPI oled)
 	for (uint8_t y = 0; y < 8; y++) {
 		for (uint8_t x = 0; x < 3; x++) {
 			oled.gotoXY(x * 43, y);
-			oled.print(functions[y][x]);
+			oled.print(labels[y][x]);
 		}
 	}
 }

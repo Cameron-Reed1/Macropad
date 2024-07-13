@@ -10,6 +10,7 @@ namespace ConfigState {
 
 enum class ConfigValue {
     None,
+    Slot,
     Brightness,
     ColorOutR,
     ColorOutG,
@@ -22,14 +23,16 @@ enum class ConfigValue {
 template <ConfigValue val>
 void switch_active(bool rising, bool falling);
 
+void back(bool rising, bool falling);
 void save(bool rising, bool falling);
-constexpr keyCallback brightness = switch_active<ConfigValue::Brightness>;
+constexpr keyCallback slot = switch_active<ConfigValue::Slot>;
 constexpr keyCallback colorOutR = switch_active<ConfigValue::ColorOutR>;
 constexpr keyCallback colorOutG = switch_active<ConfigValue::ColorOutG>;
 constexpr keyCallback colorOutB = switch_active<ConfigValue::ColorOutB>;
 constexpr keyCallback colorInR = switch_active<ConfigValue::ColorInR>;
 constexpr keyCallback colorInG = switch_active<ConfigValue::ColorInG>;
 constexpr keyCallback colorInB = switch_active<ConfigValue::ColorInB>;
+constexpr keyCallback brightness = switch_active<ConfigValue::Brightness>;
 
 void encoder_handler(int last_position, int new_position);
 void oled_draw(SH1106_SPI oled);
@@ -38,10 +41,10 @@ void printKeys(SH1106_SPI oled);
 
 static ConfigValue activeValue = ConfigValue::None;
 static MacropadState configState(ripple,
-        return_to_parent_state, save, brightness,
+        back, save, slot,
         colorOutR, colorOutG, colorOutB,
         colorInR, colorInG, colorInB,
-        nullptr, nullptr, nullptr,
+        brightness, nullptr, nullptr,
         encoder_handler, nullptr, oled_draw);
 
 
@@ -56,12 +59,29 @@ void load_state(MacropadState* parent)
 	Macropad::get_instance().set_macropad_state(&configState);
 }
 
-void save(bool rising, bool falling)
+void back(bool rising, bool falling)
 {
-    (void) rising;
+    if (rising) {
+        if (activeValue == ConfigValue::Slot) {
+            Config::switchSlot(Macropad::get_instance().get_encoder_position() - 1);
+        }
+    }
 
     if (falling) {
-        Config::flush();
+        Macropad::get_instance().load_parent_state();
+    }
+}
+
+void save(bool rising, bool falling)
+{
+    (void) falling;
+
+    if (rising) {
+        if (activeValue != ConfigValue::None) {
+            switch_active<ConfigValue::None>(true, false);
+        } else {
+            Config::flush();
+        }
     }
 }
 
@@ -81,6 +101,13 @@ void encoder_handler(int last_position, int new_position)
 	}
     
     switch (activeValue) {
+        case ConfigValue::Slot:
+            if (new_position < 1) {
+                macropad.set_encoder_position(1);
+            } else if (new_position > NUM_SLOTS) {
+                macropad.set_encoder_position(NUM_SLOTS);
+            }
+            break;
         case ConfigValue::Brightness:
             cfg->brightness = macropad.get_encoder_position();
             ripple_anim_set_brightness(cfg->brightness);
@@ -118,7 +145,14 @@ void oled_draw(SH1106_SPI oled)
     Macropad& macropad = Macropad::get_instance();
 
 	oled.gotoXY(0, 0);
+    oled.print("Active config slot: ");
+    oled.print(Config::getSlot() + 1);
+
+    oled.gotoXY(0, 1);
     switch (activeValue) {
+        case ConfigValue::Slot:
+            oled.print("Config slot: ");
+            break;
         case ConfigValue::Brightness:
 	        oled.print("Brightness: ");
             break;
@@ -150,10 +184,10 @@ void oled_draw(SH1106_SPI oled)
 void printKeys(SH1106_SPI oled)
 {
 	const char* const labels[4][3] = {
-		{"Back", "Save", "Bright"},
+		{"Back", "Save", "Slot"},
 		{"Out R", "Out G", "Out B"},
 		{"In R", "In G", "In B"},
-		{"", "", ""},
+		{"Bright", "", ""},
 	};
 
 	for (uint8_t y = 0; y < 4; y++) {
@@ -170,7 +204,11 @@ void switch_active(bool rising, bool falling)
     (void) falling;
 
     if (rising) {
-        if (activeValue == val) {
+        if (activeValue == ConfigValue::Slot) {
+            Config::switchSlot(Macropad::get_instance().get_encoder_position() - 1);
+        }
+
+        if (activeValue != ConfigValue::None) {
             activeValue = ConfigValue::None;
         } else {
             activeValue = val;
@@ -180,6 +218,9 @@ void switch_active(bool rising, bool falling)
         CFG* cfg = Config::get();
 
         switch (activeValue) {
+            case ConfigValue::Slot:
+                macropad.set_encoder_position(Config::getSlot() + 1);
+                break;
             case ConfigValue::Brightness:
                 macropad.set_encoder_position(cfg->brightness);
                 break;

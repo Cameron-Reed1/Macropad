@@ -1,3 +1,6 @@
+#include <tusb.h>
+#include <bsp/board.h>
+#include "usb_descriptors.h"
 #include "Macropad.h"
 
 MacropadState suspendedState = MacropadState();

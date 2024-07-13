@@ -4,20 +4,19 @@
 #include "states/common.h"
 #include "MacropadState.h"
 #include "Macropad.h"
+#include "PinDefs.h"
 #include "Config.h"
-
 
 namespace DebugState {
 
 void enterBootloader(bool rising, bool falling);
-void saveConfig(bool rising, bool falling);
 void eraseConfig(bool rising, bool falling);
 
 void oled_draw(SH1106_SPI oled);
 
 static MacropadState debugState(ripple,
-        return_to_parent_state, enterBootloader, saveConfig,
-        eraseConfig, nullptr, nullptr,
+        return_to_parent_state, enterBootloader, eraseConfig,
+        nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr,
         nullptr, nullptr, oled_draw);
@@ -37,29 +36,20 @@ void enterBootloader(bool rising, bool falling)
 	reset_usb_boot(1 << LED, 0);
 }
 
-void saveConfig(bool rising, bool falling)
-{
-    (void) falling;
-
-    if (rising) {
-        Config::flush();
-    }
-}
-
 void eraseConfig(bool rising, bool falling)
 {
     (void) falling;
 
     if (rising) {
-        Config::erase();
+        Config::eraseAll();
     }
 }
 
 void oled_draw(SH1106_SPI oled)
 {
-	const char* const functions[4][3] = {
-		{"Back", "Boot", "Save"},
-		{"Erase", "", ""},
+	const char* const labels[4][3] = {
+		{"Back", "Boot", "Erase"},
+		{"", "", ""},
 		{"", "", ""},
 		{"", "", ""}
 	};
@@ -67,7 +57,7 @@ void oled_draw(SH1106_SPI oled)
 	for (uint8_t y = 0; y < 4; y++) {
 		for (uint8_t x = 0; x < 3; x++) {
 			oled.gotoXY(x * 45, y * 2);
-			oled.print(functions[y][x]);
+			oled.print(labels[y][x]);
 		}
 	}
 }

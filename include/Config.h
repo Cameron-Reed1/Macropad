@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+
+#define NUM_SLOTS 10
+
+
 struct CFG {
     uint8_t magic = 0x64;
 
@@ -19,8 +23,11 @@ struct CFG {
 namespace Config {
 CFG* read();
 CFG* get();
-void erase();
+uint8_t getSlot();
 CFG* savedValues();
+void switchSlot(uint8_t slot);
+void erase();
+void eraseAll();
 void flush();
 }
 

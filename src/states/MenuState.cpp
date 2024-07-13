@@ -8,7 +8,6 @@
 #include "states/common.h"
 #include "MacropadState.h"
 #include "Macropad.h"
-#include "Config.h"
 
 
 namespace MenuState {
@@ -30,7 +29,7 @@ static MacropadState menuState(ripple,
 
 void load_state()
 {
-    menuState.set_oled_automatic_updates(false);
+    menuState.set_oled_automatic_updates(true);
     Macropad::get_instance().set_macropad_state(&menuState);
 }
 
@@ -87,7 +86,7 @@ void oled_draw(SH1106_SPI oled)
 	oled.print("Encoder Position: ");
 	oled.print(macropad.get_encoder_position());
 
-    CFG* cfg = Config::get();
+    /* CFG* cfg = Config::get();
     oled.gotoXY(0, 1);
     oled.print("Config value: ");
     oled.print(cfg->brightness);
@@ -95,7 +94,7 @@ void oled_draw(SH1106_SPI oled)
     CFG* cfg_saved = Config::savedValues();
     oled.gotoXY(0, 2);
     oled.print("Saved value: ");
-    oled.print(cfg_saved->brightness);
+    oled.print(cfg_saved->brightness); */
 
 	for (int i = NUM_KEYS; i < NUM_KEYS; i++) {
 		if (macropad.get_key_state(i + 1)) {

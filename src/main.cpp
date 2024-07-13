@@ -1,5 +1,3 @@
-#include <pico/bootrom.h>
-
 #include "states/MenuState.h"
 #include "RippleAnim.h"
 #include "Macropad.h"

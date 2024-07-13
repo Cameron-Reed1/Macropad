@@ -1,21 +1,13 @@
 #pragma once
 
 #include <pico/stdio.h>
-#include "pico/stdlib.h"
-#include "hardware/spi.h"
-#include "hardware/i2c.h"
-#include "hardware/watchdog.h"
-#include "hardware/pwm.h"
-#include "PinDefs.h"
+#include <hardware/spi.h>
 #include "RotaryEncoder.h"
 #include "MacropadState.h"
-#include "Keys.h"
 #include "Adafruit_NeoPixel.hpp"
 #include "SH1106_SPI.h"
-#include "bsp/board.h"
-#include "tusb.h"
-#include "usb_descriptors.h"
 #include "Macro.h"
+#include "Keys.h"
 
 #define SPI_PORT spi1
 #define NUM_KEYS 12
