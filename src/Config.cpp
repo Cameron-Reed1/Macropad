@@ -89,9 +89,9 @@ CFG* savedValues()
 
 void switchSlot(uint8_t slot)
 {
-    // if (slot >= NUM_SLOTS || slot == slot_index) {
-    //     return;
-    // }
+    if (slot >= NUM_SLOTS || slot == slot_index) {
+        return;
+    }
 
     _switchSlot(slot);
     read();

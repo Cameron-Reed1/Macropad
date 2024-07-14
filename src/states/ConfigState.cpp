@@ -99,20 +99,21 @@ void ConfigState::EncoderHandler()
         return;
     }
 
+    Macropad& macropad = Macropad::get_instance();
     CFG* cfg = Config::get();
 
 	if (m_EncoderPosition < 0) {
-	    set_encoder_position(0);
+	    macropad.set_encoder_position(0);
 	} else if (m_EncoderPosition > 255) {
-	    set_encoder_position(255);
+	    macropad.set_encoder_position(255);
 	}
 
     switch (m_ActiveValue) {
         case ConfigValue::Slot:
             if (m_EncoderPosition < 1) {
-                set_encoder_position(1);
+                macropad.set_encoder_position(1);
             } else if (m_EncoderPosition > NUM_SLOTS) {
-                set_encoder_position(NUM_SLOTS);
+                macropad.set_encoder_position(NUM_SLOTS);
             }
             break;
         case ConfigValue::Brightness:
@@ -222,35 +223,36 @@ void ConfigState::SwitchActive(bool rising, bool falling)
             m_ActiveValue = val;
         }
 
+        Macropad& macropad = Macropad::get_instance();
         CFG* cfg = Config::get();
 
         switch (m_ActiveValue) {
             case ConfigValue::Slot:
-                set_encoder_position(Config::getSlot() + 1);
+                macropad.set_encoder_position(Config::getSlot() + 1);
                 break;
             case ConfigValue::Brightness:
-                set_encoder_position(cfg->brightness);
+                macropad.set_encoder_position(cfg->brightness);
                 break;
             case ConfigValue::ColorOutR:
-                set_encoder_position(cfg->colorOutR);
+                macropad.set_encoder_position(cfg->colorOutR);
                 break;
             case ConfigValue::ColorOutG:
-                set_encoder_position(cfg->colorOutG);
+                macropad.set_encoder_position(cfg->colorOutG);
                 break;
             case ConfigValue::ColorOutB:
-                set_encoder_position(cfg->colorOutB);
+                macropad.set_encoder_position(cfg->colorOutB);
                 break;
             case ConfigValue::ColorInR:
-                set_encoder_position(cfg->colorInR);
+                macropad.set_encoder_position(cfg->colorInR);
                 break;
             case ConfigValue::ColorInG:
-                set_encoder_position(cfg->colorInG);
+                macropad.set_encoder_position(cfg->colorInG);
                 break;
             case ConfigValue::ColorInB:
-                set_encoder_position(cfg->colorInB);
+                macropad.set_encoder_position(cfg->colorInB);
                 break;
             case ConfigValue::None:
-                set_encoder_position(0);
+                macropad.set_encoder_position(0);
                 break;
         }
     }
