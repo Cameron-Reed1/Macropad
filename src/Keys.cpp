@@ -2,7 +2,7 @@
 #include "Keys.h"
 
 Keys::Keys(uint8_t keyCount, bool defaultHigh /* = false */, uint8_t firstGPIO /* = 1 */)
-	: m_DefaultHigh(defaultHigh), m_KeyCount(keyCount), m_FirstGPIO(firstGPIO) { }
+    : m_DefaultHigh(defaultHigh), m_KeyCount(keyCount), m_FirstGPIO(firstGPIO) { }
 
 void Keys::update(void) {
     m_OldValues = m_Values;

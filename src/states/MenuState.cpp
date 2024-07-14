@@ -25,54 +25,54 @@ void MenuState::KeyAny(uint8_t key, bool rising, bool falling)
 
 void MenuState::Key1(bool rising, bool falling)
 {
-	(void) rising;
+    (void) rising;
 
-	if (falling) {
+    if (falling) {
         teamsState.Activate();
     }
 }
 
 void MenuState::Key2(bool rising, bool falling)
 {
-	(void) rising;
+    (void) rising;
 
-	if (falling) {
+    if (falling) {
         genericState.Activate();
     }
 }
 
 void MenuState::Key3(bool rising, bool falling)
 {
-	(void) rising;
+    (void) rising;
 
-	if (falling) {
+    if (falling) {
         configState.Activate();
-	}
+    }
 }
 
 void MenuState::Key4(bool rising, bool falling)
 {
-	(void) rising;
+    (void) rising;
 
-	if (falling) {
+    if (falling) {
         linkState.Activate();
-	}
+    }
 }
 
 void MenuState::Key5(bool rising, bool falling)
 {
-	(void) rising;
+    (void) rising;
 
-	if (falling) {
+    if (falling) {
         debugState.Activate();
     }
 }
 
 void MenuState::Key6(bool rising, bool falling)
 {
-	(void) rising;
+    (void) rising;
 
-	if (falling) {
+    if (falling) {
         timerState.Activate();
     }
 }
@@ -93,9 +93,9 @@ void MenuState::OledDraw(SH1106_SPI oled)
 {
     Macropad& macropad = Macropad::get_instance();
 
-	oled.gotoXY(0, 0);
-	oled.print("Encoder Position: ");
-	oled.print(macropad.get_encoder_position());
+    oled.gotoXY(0, 0);
+    oled.print("Encoder Position: ");
+    oled.print(macropad.get_encoder_position());
 
     /* CFG* cfg = Config::get();
     oled.gotoXY(0, 1);
@@ -107,12 +107,12 @@ void MenuState::OledDraw(SH1106_SPI oled)
     oled.print("Saved value: ");
     oled.print(cfg_saved->brightness); */
 
-	for (int i = 0; i < NUM_KEYS; i++) {
-		if (macropad.get_key_state(i)) {
-			oled.gotoXY((i % 3) * 48, (i / 3) + 4);
-			oled.print("KEY");
-			oled.print(i + 1);
-		}
-	}
+    for (int i = 0; i < NUM_KEYS; i++) {
+        if (macropad.get_key_state(i)) {
+            oled.gotoXY((i % 3) * 48, (i / 3) + 4);
+            oled.print("KEY");
+            oled.print(i + 1);
+        }
+    }
 }
 

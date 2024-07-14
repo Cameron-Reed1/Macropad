@@ -20,13 +20,13 @@ Macropad::Macropad()
 
 Macropad& Macropad::get_instance()
 {
-	return s_Instance;
+    return s_Instance;
 }
 
 void Macropad::init(bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma)
 {
-	if (init_tinyUSB) {
-		this->init_tinyUSB();
+    if (init_tinyUSB) {
+        this->init_tinyUSB();
     }
 
     if (init_keys) {
@@ -58,12 +58,12 @@ void Macropad::init_tinyUSB()
 {
     board_init();
     tusb_init();
-	m_UseTinyUSB = true;
+    m_UseTinyUSB = true;
 }
 
 void Macropad::init_keys()
 {
-	bi_decl_if_func_used(bi_pin_mask_with_name(0x0fff << KEY1, "Keys"));
+    bi_decl_if_func_used(bi_pin_mask_with_name(0x0fff << KEY1, "Keys"));
 
     gpio_init(KEY1);
     gpio_init(KEY2);
@@ -109,18 +109,18 @@ void Macropad::init_keys()
 
 void Macropad::init_oled()
 {
-	bi_decl_if_func_used(bi_3pins_with_names(PIN_CS, "Oled Chip Select", PIN_RESET, "Oled reset", PIN_DC, "Oled Data/Command"));
-	bi_decl_if_func_used(bi_3pins_with_names(PIN_SCK, "Oled clock", PIN_MOSI, "Oled MOSI", PIN_MISO, "Oled MISO"));
+    bi_decl_if_func_used(bi_3pins_with_names(PIN_CS, "Oled Chip Select", PIN_RESET, "Oled reset", PIN_DC, "Oled Data/Command"));
+    bi_decl_if_func_used(bi_3pins_with_names(PIN_SCK, "Oled clock", PIN_MOSI, "Oled MOSI", PIN_MISO, "Oled MISO"));
 
     gpio_init(PIN_CS);
-	gpio_init(PIN_RESET);
-	gpio_init(PIN_DC);
+    gpio_init(PIN_RESET);
+    gpio_init(PIN_DC);
 
     gpio_set_dir(PIN_CS, GPIO_OUT);
     gpio_set_dir(PIN_RESET, GPIO_OUT);
-	gpio_set_dir(PIN_DC, GPIO_OUT);
+    gpio_set_dir(PIN_DC, GPIO_OUT);
 
-	gpio_put(PIN_CS, 1);
+    gpio_put(PIN_CS, 1);
 
     m_Oled.begin();
 
@@ -129,7 +129,7 @@ void Macropad::init_oled()
 
 void Macropad::init_speaker()
 {
-	bi_decl_if_func_used(bi_2pins_with_names(SPEAKER, "Speaker", SPEAKER_ENABLE, "Speaker enable"));
+    bi_decl_if_func_used(bi_2pins_with_names(SPEAKER, "Speaker", SPEAKER_ENABLE, "Speaker enable"));
 
     gpio_init(SPEAKER_ENABLE);
     gpio_init(SPEAKER);
@@ -152,7 +152,7 @@ void Macropad::init_speaker()
 
 void Macropad::init_pixels()
 {
-	bi_decl_if_func_used(bi_1pin_with_name(NEOPIXEL, "Neopixel"));
+    bi_decl_if_func_used(bi_1pin_with_name(NEOPIXEL, "Neopixel"));
 
     gpio_init(LED);
     gpio_init(NEOPIXEL);
@@ -172,7 +172,7 @@ void Macropad::init_pixels()
 
 void Macropad::init_encoder()
 {
-	bi_decl_if_func_used(bi_3pins_with_names(ENCODER_BUTTON, "Rotary encoder press", ROTA, "Rotary encoder A", ROTB, "Rotary encoder B"));
+    bi_decl_if_func_used(bi_3pins_with_names(ENCODER_BUTTON, "Rotary encoder press", ROTA, "Rotary encoder A", ROTB, "Rotary encoder B"));
 
     gpio_init(ENCODER_BUTTON);
     gpio_init(ROTA);
@@ -192,7 +192,7 @@ void Macropad::init_encoder()
 
 void Macropad::init_stemma()
 {
-	bi_decl_if_func_used(bi_2pins_with_names(STEMMA_SDA, "Stemma data", STEMMA_SCL, "Stemma clock"));
+    bi_decl_if_func_used(bi_2pins_with_names(STEMMA_SDA, "Stemma data", STEMMA_SCL, "Stemma clock"));
 
     gpio_init(STEMMA_SDA);
     gpio_init(STEMMA_SCL);
@@ -205,40 +205,40 @@ void Macropad::init_stemma()
 
 MacropadState* Macropad::get_macropad_state()
 {
-	return m_State;
+    return m_State;
 }
 
 bool Macropad::get_key_state(uint8_t key)
 {
-	if (!m_UseKeys) {
-		return false;
+    if (!m_UseKeys) {
+        return false;
     }
 
-	return m_Keys.getKeyValue(key);
+    return m_Keys.getKeyValue(key);
 }
 
 int Macropad::get_encoder_position()
 {
-	if (!m_UseEncoder) {
-		return 0;
+    if (!m_UseEncoder) {
+        return 0;
     }
 
-	return m_State->get_encoder_position();
+    return m_State->get_encoder_position();
 }
 
 void Macropad::set_encoder_position(int new_position)
 {
-	if (!m_UseEncoder) {
-		return;
+    if (!m_UseEncoder) {
+        return;
     }
 
-	m_State->set_encoder_position(new_position);
-	m_Encoder.setPosition(new_position);
+    m_State->set_encoder_position(new_position);
+    m_Encoder.setPosition(new_position);
 }
 
 void Macropad::run()
 {
-	m_StateChanged = false;
+    m_StateChanged = false;
 
     if (m_UseEncoder) {
         run_encoder();
@@ -250,17 +250,17 @@ void Macropad::run()
 
     if (m_UsePixels && m_Pixels.canShow()) {
         run_pixels();
-	}
+    }
 
     if (m_UseOled && m_UpdateOled) {
         run_oled();
-	}
+    }
 
     if (m_UseTinyUSB) {
         run_tinyUSB();
-	}
+    }
 
-	sleep_ms(10);
+    sleep_ms(10);
 }
 
 void Macropad::run_encoder()
@@ -394,31 +394,31 @@ void Macropad::encoder_tick()
 
 void Macropad::update_oled()
 {
-	if (!m_UseOled) {
-		return;
+    if (!m_UseOled) {
+        return;
     }
 
-	m_UpdateOled = true;
+    m_UpdateOled = true;
 }
 
 void Macropad::set_macropad_state(MacropadState* newState)
 {
-	m_State = newState;
-	m_UpdateOled = true;
-	m_Encoder.setPosition(m_State->get_encoder_position());
-	m_StateChanged = true;
+    m_State = newState;
+    m_UpdateOled = true;
+    m_Encoder.setPosition(m_State->get_encoder_position());
+    m_StateChanged = true;
 
-	for (uint8_t i = 0; i < 6; i++) {
-		m_KeysPressed[i] = HID_KEY_NONE;
-		m_TimesPressed[i] = 0;
-	}
+    for (uint8_t i = 0; i < 6; i++) {
+        m_KeysPressed[i] = HID_KEY_NONE;
+        m_TimesPressed[i] = 0;
+    }
 }
 
 void Macropad::load_parent_state()
 {
     MacropadState* parent = m_State->get_parent_state();
-	if (parent != nullptr) {
-		this->set_macropad_state(parent);
+    if (parent != nullptr) {
+        this->set_macropad_state(parent);
     }
 }
 
@@ -429,135 +429,135 @@ uint32_t Macropad::pixelColor(uint8_t red, uint8_t green, uint8_t blue)
 
 void Macropad::type(const char *str)
 {
-	if (!m_UseTinyUSB || !tud_mounted()) {
-		return;
+    if (!m_UseTinyUSB || !tud_mounted()) {
+        return;
     }
 
-	uint8_t report[6] = {0}, modifier = 0, i = 0;
-	while (str[i] != 0x00 && i != 255) {
-		while (!tud_hid_ready()) {
-			tud_task();
-		}
-		report[0] = ascii_to_keycode_conv[(uint8_t) str[i]][1];
-		if (ascii_to_keycode_conv[(uint8_t) str[i]][0]) {
-			modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
-		} else {
-			modifier = 0;
-		}
-		tud_hid_keyboard_report(REPORT_ID_KEYBOARD, modifier, report);
-		while (!tud_hid_ready()) {
-			tud_task();
-		}
-		report[0] = HID_KEY_NONE;
-		tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, report);
-		i++;
-	}
+    uint8_t report[6] = {0}, modifier = 0, i = 0;
+    while (str[i] != 0x00 && i != 255) {
+        while (!tud_hid_ready()) {
+            tud_task();
+        }
+        report[0] = ascii_to_keycode_conv[(uint8_t) str[i]][1];
+        if (ascii_to_keycode_conv[(uint8_t) str[i]][0]) {
+            modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
+        } else {
+            modifier = 0;
+        }
+        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, modifier, report);
+        while (!tud_hid_ready()) {
+            tud_task();
+        }
+        report[0] = HID_KEY_NONE;
+        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, report);
+        i++;
+    }
 }
 
 bool Macropad::press_key(uint8_t key)
 {
-	if (!m_UseTinyUSB) {
-		return false;
+    if (!m_UseTinyUSB) {
+        return false;
     }
 
-	for (uint8_t i = 0; i < 6; i++) {
-		if (m_KeysPressed[i] == key) {
-			m_TimesPressed[i] += 1;
-			return true;
-		}
-	}
+    for (uint8_t i = 0; i < 6; i++) {
+        if (m_KeysPressed[i] == key) {
+            m_TimesPressed[i] += 1;
+            return true;
+        }
+    }
 
-	for (uint8_t i = 0; i < 6; i++) {
-		if (m_KeysPressed[i] == HID_KEY_NONE) {
-			m_KeysPressed[i] = key;
-			m_TimesPressed[i] = 1;
-			return true;
-		}
-	}
+    for (uint8_t i = 0; i < 6; i++) {
+        if (m_KeysPressed[i] == HID_KEY_NONE) {
+            m_KeysPressed[i] = key;
+            m_TimesPressed[i] = 1;
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 bool Macropad::release_key(uint8_t key)
 {
-	if (!m_UseTinyUSB) {
-		return false;
+    if (!m_UseTinyUSB) {
+        return false;
     }
 
-	for (uint8_t i = 0; i < 6; i++) {
-		if (m_KeysPressed[i] == key) {
-			if (m_TimesPressed[i] > 1) {
-				m_TimesPressed[i] -= 1;
-			} else {
-				while (m_KeysPressed[i + 1] && i < 5) {
-					m_KeysPressed[i] = m_KeysPressed[i + 1];
-					m_TimesPressed[i] = m_TimesPressed[i + 1];
-					i++;
-				}
-				m_KeysPressed[i] = HID_KEY_NONE;
-				m_TimesPressed[i] = 0;
-			}
+    for (uint8_t i = 0; i < 6; i++) {
+        if (m_KeysPressed[i] == key) {
+            if (m_TimesPressed[i] > 1) {
+                m_TimesPressed[i] -= 1;
+            } else {
+                while (m_KeysPressed[i + 1] && i < 5) {
+                    m_KeysPressed[i] = m_KeysPressed[i + 1];
+                    m_TimesPressed[i] = m_TimesPressed[i + 1];
+                    i++;
+                }
+                m_KeysPressed[i] = HID_KEY_NONE;
+                m_TimesPressed[i] = 0;
+            }
 
-			return true;
-		}
-	}
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 bool Macropad::press_consumer_key(uint16_t key)
 {
-	if (!m_UseTinyUSB) {
-		return false;
+    if (!m_UseTinyUSB) {
+        return false;
     }
 
-	m_ConsumerReport = key;
-	m_ConsumerReportQueued = true;
-	return true;
+    m_ConsumerReport = key;
+    m_ConsumerReportQueued = true;
+    return true;
 }
 
 bool Macropad::release_consumer_keys()
 {
-	if (!m_UseTinyUSB) {
-		return false;
+    if (!m_UseTinyUSB) {
+        return false;
     }
 
-	m_ConsumerReport = 0;
-	m_ConsumerReportQueued = true;
-	return true;
+    m_ConsumerReport = 0;
+    m_ConsumerReportQueued = true;
+    return true;
 }
 
 bool Macropad::press_system_key(uint16_t key)
 {
-	if (!m_UseTinyUSB) {
-		return false;
+    if (!m_UseTinyUSB) {
+        return false;
     }
 
-	m_SystemReport = key;
-	m_SystemReportQueued = true;
-	return true;
+    m_SystemReport = key;
+    m_SystemReportQueued = true;
+    return true;
 }
 
 bool Macropad::release_system_keys()
 {
-	if (!m_UseTinyUSB) {
-		return false;
+    if (!m_UseTinyUSB) {
+        return false;
     }
 
-	m_SystemReport = 0;
-	m_SystemReportQueued = true;
-	return true;
+    m_SystemReport = 0;
+    m_SystemReportQueued = true;
+    return true;
 }
 
 bool Macropad::play_macro(Macro* macro)
 {
-	if (m_RunningMacro) {
-		return false;
+    if (m_RunningMacro) {
+        return false;
     }
 
-	macro->restart();
-	m_RunningMacro = macro;
-	return true;
+    macro->restart();
+    m_RunningMacro = macro;
+    return true;
 }
 
 

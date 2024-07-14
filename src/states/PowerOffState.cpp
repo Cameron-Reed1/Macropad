@@ -31,10 +31,10 @@ void PowerOffState::Key12(bool rising, bool falling)
 
 void PowerOffState::OledDraw(SH1106_SPI oled)
 {
-	oled.gotoXY(0, 0);
-	oled.print("Are you sure?");
+    oled.gotoXY(0, 0);
+    oled.print("Are you sure?");
 
-	oled.gotoXY(86, 5);
-	oled.print("Yes");
+    oled.gotoXY(86, 5);
+    oled.print("Yes");
 }
 

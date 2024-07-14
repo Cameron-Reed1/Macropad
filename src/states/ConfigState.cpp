@@ -102,11 +102,11 @@ void ConfigState::EncoderHandler()
     Macropad& macropad = Macropad::get_instance();
     CFG* cfg = Config::get();
 
-	if (m_EncoderPosition < 0) {
-	    macropad.set_encoder_position(0);
-	} else if (m_EncoderPosition > 255) {
-	    macropad.set_encoder_position(255);
-	}
+    if (m_EncoderPosition < 0) {
+        macropad.set_encoder_position(0);
+    } else if (m_EncoderPosition > 255) {
+        macropad.set_encoder_position(255);
+    }
 
     switch (m_ActiveValue) {
         case ConfigValue::Slot:
@@ -152,7 +152,7 @@ void ConfigState::OledDraw(SH1106_SPI oled)
         return;
     }
 
-	oled.gotoXY(0, 0);
+    oled.gotoXY(0, 0);
     oled.print("Active config slot: ");
     oled.print(Config::getSlot() + 1);
 
@@ -162,48 +162,48 @@ void ConfigState::OledDraw(SH1106_SPI oled)
             oled.print("Config slot: ");
             break;
         case ConfigValue::Brightness:
-	        oled.print("Brightness: ");
+            oled.print("Brightness: ");
             break;
         case ConfigValue::ColorOutR:
-	        oled.print("Out Red: ");
+            oled.print("Out Red: ");
             break;
         case ConfigValue::ColorOutG:
-	        oled.print("Out Green: ");
+            oled.print("Out Green: ");
             break;
         case ConfigValue::ColorOutB:
-	        oled.print("Out Blue: ");
+            oled.print("Out Blue: ");
             break;
         case ConfigValue::ColorInR:
-	        oled.print("In Red: ");
+            oled.print("In Red: ");
             break;
         case ConfigValue::ColorInG:
-	        oled.print("In Green: ");
+            oled.print("In Green: ");
             break;
         case ConfigValue::ColorInB:
-	        oled.print("In Blue: ");
+            oled.print("In Blue: ");
             break;
         default:
             oled.print("Unknown cfg option: ");
             break;
     }
-	oled.print(get_encoder_position());
+    oled.print(get_encoder_position());
 }
 
 void ConfigState::PrintKeys(SH1106_SPI oled)
 {
-	const char* const labels[4][3] = {
-		{"Back", "Save", "Slot"},
-		{"Out R", "Out G", "Out B"},
-		{"In R", "In G", "In B"},
-		{"Bright", "", ""},
-	};
+    const char* const labels[4][3] = {
+        {"Back", "Save", "Slot"},
+        {"Out R", "Out G", "Out B"},
+        {"In R", "In G", "In B"},
+        {"Bright", "", ""},
+    };
 
-	for (uint8_t y = 0; y < 4; y++) {
-		for (uint8_t x = 0; x < 3; x++) {
-			oled.gotoXY(x * 43, y * 2);
-			oled.print(labels[y][x]);
-		}
-	}
+    for (uint8_t y = 0; y < 4; y++) {
+        for (uint8_t x = 0; x < 3; x++) {
+            oled.gotoXY(x * 43, y * 2);
+            oled.print(labels[y][x]);
+        }
+    }
 }
 
 

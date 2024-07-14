@@ -14,7 +14,7 @@ public:
 
 private:
     bool m_DefaultHigh;
-	uint8_t m_FirstGPIO;
+    uint8_t m_FirstGPIO;
     uint8_t m_KeyCount;
     uint32_t m_Values;
     uint32_t m_OldValues;

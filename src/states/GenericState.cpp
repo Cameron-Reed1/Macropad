@@ -61,9 +61,9 @@ void GenericState::Key9(bool rising, bool falling)
 
 void GenericState::Key12(bool rising, bool falling)
 {
-	(void) rising;
+    (void) rising;
 
-	if (falling) {
+    if (falling) {
         powerOffState.Activate();
     }
 }
@@ -82,22 +82,22 @@ void GenericState::EncoderPress(bool rising, bool falling)
 
 void GenericState::OledDraw(SH1106_SPI oled)
 {
-	const char* const labels[8][3] = {
-		{"Back", "Lock", "Lock"},
-		{"", "", "Win"},
-		{"Copy", "Paste", "Select"},
-		{"", "", ""},
-		{"Desktop", "Task", "Screen"},
-		{"", "Manager", "Shot"},
-		{"", "", "Power"},
-		{"", "", ""}
-	};
+    const char* const labels[8][3] = {
+        {"Back", "Lock", "Lock"},
+        {"", "", "Win"},
+        {"Copy", "Paste", "Select"},
+        {"", "", ""},
+        {"Desktop", "Task", "Screen"},
+        {"", "Manager", "Shot"},
+        {"", "", "Power"},
+        {"", "", ""}
+    };
 
-	for (uint8_t y = 0; y < 8; y++) {
-		for (uint8_t x = 0; x < 3; x++) {
-			oled.gotoXY(x * 43, y);
-			oled.print(labels[y][x]);
-		}
-	}
+    for (uint8_t y = 0; y < 8; y++) {
+        for (uint8_t x = 0; x < 3; x++) {
+            oled.gotoXY(x * 43, y);
+            oled.print(labels[y][x]);
+        }
+    }
 }
 

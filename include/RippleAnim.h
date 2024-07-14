@@ -10,8 +10,8 @@
 #define FRAME_TIME_OVERLAP_MS 25
 
 enum RippleAnimDir : int8_t {
-	DIR_IN = -1,
-	DIR_OUT = 1
+    DIR_IN = -1,
+    DIR_OUT = 1
 };
 
 void ripple_anim_setup();

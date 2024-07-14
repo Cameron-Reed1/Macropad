@@ -20,15 +20,15 @@ void TeamsState::Key1(bool rising, bool falling)
 
 void TeamsState::Key7(bool rising, bool falling)
 {
-	(void) falling;
+    (void) falling;
 
-	static Macro* macro = nullptr;
-	if (macro == nullptr) {
-		macro = new Macro(6);
-		macro->addKeyPressStep(HID_KEY_CONTROL_LEFT, 1, HID_KEY_SHIFT_LEFT, HID_KEY_P).addSleepStep(500).addKeyPressStep(HID_KEY_ENTER).addKeyPressStep(HID_KEY_TAB, 2).addKeyPressStep(HID_KEY_ENTER);
-	}
+    static Macro* macro = nullptr;
+    if (macro == nullptr) {
+        macro = new Macro(6);
+        macro->addKeyPressStep(HID_KEY_CONTROL_LEFT, 1, HID_KEY_SHIFT_LEFT, HID_KEY_P).addSleepStep(500).addKeyPressStep(HID_KEY_ENTER).addKeyPressStep(HID_KEY_TAB, 2).addKeyPressStep(HID_KEY_ENTER);
+    }
 
-	if (rising) {
+    if (rising) {
         Macropad::get_instance().play_macro(macro);
     }
 }
@@ -72,18 +72,18 @@ void TeamsState::EncoderPress(bool rising, bool falling)
 
 void TeamsState::OledDraw(SH1106_SPI oled)
 {
-	const char* const functions[4][3] = {
-		{"Back", "", ""},
-		{"", "", ""},
-		{"Blur", "Leave", "Raise"},
-		{"Talk", "Mute", "Camera"}
-	};
+    const char* const functions[4][3] = {
+        {"Back", "", ""},
+        {"", "", ""},
+        {"Blur", "Leave", "Raise"},
+        {"Talk", "Mute", "Camera"}
+    };
 
-	for (uint8_t y = 0; y < 4; y++) {
-		for (uint8_t x = 0; x < 3; x++) {
-			oled.gotoXY(x * 45, y * 2);
-			oled.print(functions[y][x]);
-		}
-	}
+    for (uint8_t y = 0; y < 4; y++) {
+        for (uint8_t x = 0; x < 3; x++) {
+            oled.gotoXY(x * 45, y * 2);
+            oled.print(functions[y][x]);
+        }
+    }
 }
 
