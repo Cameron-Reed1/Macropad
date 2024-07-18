@@ -105,16 +105,14 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
 enum
 {
   ITF_NUM_HID,
-  ITF_NUM_VENDOR,
-  ITF_NUM_TOTAL
+  ITF_NUM_RESET,
+  ITF_NUM_TOTAL,
 };
 
 #define TUD_RPI_RESET_DESC_LEN  9
 #define  CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
 
 #define EPNUM_HID         0x81
-#define EPNUM_VENDOR_IN   0x82
-#define EPNUM_VENDOR_OUT  0x82
 
 #define TUD_RPI_RESET_DESCRIPTOR(_itfnum, _stridx) \
   9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, RESET_INTERFACE_SUBCLASS, RESET_INTERFACE_PROTOCOL, _stridx
@@ -126,8 +124,7 @@ uint8_t const desc_configuration[] =
 
   // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
   TUD_HID_DESCRIPTOR(ITF_NUM_HID, 4, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5),
-  // TUD_VENDOR_DESCRIPTOR(ITF_NUM_VENDOR, 5, 1, 0, 1),
-  TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_VENDOR, 5),
+  TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RESET, 5),
 };
 
 #if TUD_OPT_HIGH_SPEED

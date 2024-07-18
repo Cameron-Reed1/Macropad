@@ -14,6 +14,7 @@
 #define NUM_PIXELS NUM_KEYS
 #define MEGAHERTZ 1000 * 1000
 
+
 void gpio_callback(uint gpio, uint32_t events);
 
 class Macropad
@@ -52,6 +53,7 @@ public:
 
 public:
     uint8_t kbd_leds = 0;
+    uint16_t ComputerID = 0;
 
 private:
     Macropad();

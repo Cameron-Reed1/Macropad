@@ -8,6 +8,7 @@
 #include "states/MenuState.h"
 #include "states/common.h"
 #include "MacropadState.h"
+#include "ComputerIDs.h"
 #include "Macropad.h"
 
 
@@ -28,7 +29,11 @@ void MenuState::Key1(bool rising, bool falling)
     (void) rising;
 
     if (falling) {
-        teamsState.Activate();
+        if (Macropad::get_instance().ComputerID == FRAMEWORK_KDE) {
+            timerState.Activate();
+        } else {
+            teamsState.Activate();
+        }
     }
 }
 
@@ -68,15 +73,6 @@ void MenuState::Key5(bool rising, bool falling)
     }
 }
 
-void MenuState::Key6(bool rising, bool falling)
-{
-    (void) rising;
-
-    if (falling) {
-        timerState.Activate();
-    }
-}
-
 
 void MenuState::EncoderHandler()
 {
@@ -96,6 +92,15 @@ void MenuState::OledDraw(SH1106_SPI oled)
     oled.gotoXY(0, 0);
     oled.print("Encoder Position: ");
     oled.print(macropad.get_encoder_position());
+
+    oled.gotoXY(0, 1);
+    if (macropad.ComputerID == FRAMEWORK_KDE) {
+        oled.print("Hello, Cameron");
+    } else if (macropad.ComputerID != 0) {
+        oled.print("Computer ID: ");
+        oled.print(macropad.ComputerID);
+    }
+
 
     /* CFG* cfg = Config::get();
     oled.gotoXY(0, 1);

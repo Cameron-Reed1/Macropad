@@ -9,6 +9,12 @@
 
 #include "Macropad.h"
 #include "PinDefs.h"
+#include "Config.h"
+
+
+#define CONTROL_REQUEST_SETID 0x03
+#define CONTROL_REQUEST_CONFIG_SLOT 0x04
+
 
 class SuspendedState: public MacropadState
 {
@@ -102,6 +108,19 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, const tusb_contro
 
     if (request->bRequest == RESET_REQUEST_FLASH) {
         watchdog_reboot(0, 0, 100);
+        return true;
+    }
+
+    if (request->bRequest == CONTROL_REQUEST_SETID) {
+        Macropad& macropad = Macropad::get_instance();
+        macropad.ComputerID = request->wValue;
+        macropad.update_oled();
+        return true;
+    }
+
+    if (request->bRequest == CONTROL_REQUEST_CONFIG_SLOT && request->wValue < NUM_SLOTS) {
+        Config::switchSlot(request->wValue);
+        Macropad::get_instance().update_oled();
         return true;
     }
 

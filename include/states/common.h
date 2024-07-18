@@ -44,7 +44,7 @@ void press_keys(bool rising, bool falling) {
     }
 }
 
-template <uint8_t key>
+template <uint16_t key>
 void press_consumer_key(bool rising, bool falling)
 {
     if (rising) {
@@ -54,7 +54,7 @@ void press_consumer_key(bool rising, bool falling)
     }
 }
 
-template <uint8_t key>
+template <uint16_t key>
 void press_system_key(bool rising, bool falling)
 {
     if (rising) {

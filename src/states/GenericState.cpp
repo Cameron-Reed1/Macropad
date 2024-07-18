@@ -2,6 +2,7 @@
 #include "states/GenericState.h"
 #include "states/common.h"
 #include "MacropadState.h"
+#include "ComputerIDs.h"
 #include "Macropad.h"
 
 
@@ -21,12 +22,16 @@ void GenericState::Key1(bool rising, bool falling)
 
 void GenericState::Key2(bool rising, bool falling)
 {
-    press_keys<HID_KEY_GUI_LEFT, HID_KEY_ESCAPE>(rising, falling);
+    if (Macropad::get_instance().ComputerID == FRAMEWORK_KDE) {
+        press_keys<HID_KEY_GUI_LEFT, HID_KEY_ESCAPE>(rising, falling);
+    } else {
+        press_keys<HID_KEY_GUI_LEFT, HID_KEY_L>(rising, falling);
+    }
 }
 
 void GenericState::Key3(bool rising, bool falling)
 {
-    press_keys<HID_KEY_GUI_LEFT, HID_KEY_L>(rising, falling);
+    press_keys<HID_KEY_GUI_LEFT, HID_KEY_D>(rising, falling);
 }
 
 void GenericState::Key4(bool rising, bool falling)
@@ -46,17 +51,22 @@ void GenericState::Key6(bool rising, bool falling)
 
 void GenericState::Key7(bool rising, bool falling)
 {
-    press_keys<HID_KEY_GUI_LEFT, HID_KEY_D>(rising, falling);
+    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_ESCAPE>(rising, falling);
 }
 
 void GenericState::Key8(bool rising, bool falling)
 {
-    press_keys<HID_KEY_CONTROL_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_ESCAPE>(rising, falling);
+    press_keys<HID_KEY_GUI_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_S>(rising, falling);
 }
 
 void GenericState::Key9(bool rising, bool falling)
 {
-    press_keys<HID_KEY_GUI_LEFT, HID_KEY_SHIFT_LEFT, HID_KEY_S>(rising, falling);
+    // Open Settings
+    if (Macropad::get_instance().ComputerID == FRAMEWORK_KDE) {
+        press_consumer_key<HID_USAGE_CONSUMER_AL_CONSUMER_CONTROL_CONFIGURATION>(rising, falling);
+    } else {
+        press_keys<HID_KEY_GUI_LEFT, HID_KEY_I>(rising, falling);
+    }
 }
 
 void GenericState::Key12(bool rising, bool falling)
@@ -83,12 +93,12 @@ void GenericState::EncoderPress(bool rising, bool falling)
 void GenericState::OledDraw(SH1106_SPI oled)
 {
     const char* const labels[8][3] = {
-        {"Back", "Lock", "Lock"},
-        {"", "", "Win"},
+        {"Back", "Lock", "Desktop"},
+        {"", "", ""},
         {"Copy", "Paste", "Select"},
         {"", "", ""},
-        {"Desktop", "Task", "Screen"},
-        {"", "Manager", "Shot"},
+        {"Task", "Screen", "Settings"},
+        {"Manager", "Shot", ""},
         {"", "", "Power"},
         {"", "", ""}
     };

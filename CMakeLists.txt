@@ -31,25 +31,25 @@ pico_set_program_version(Macropad "0.3")
 pico_enable_stdio_uart(Macropad 0)
 pico_enable_stdio_usb(Macropad 0)
 
-# Add the standard library to the build
-target_link_libraries(Macropad pico_stdlib)
 
 # Add any user requested libraries
 target_link_libraries(Macropad
-        hardware_flash
-        hardware_sync
-        hardware_spi
+        pico_stdlib
+        pico_malloc
+        pico_mem_ops
+        pico_bootrom
+        pico_neopixel
+        pico_multicore
+        pico_usb_reset_interface
         hardware_i2c
         hardware_pwm
+        hardware_spi
+        hardware_sync
+        hardware_flash
         hardware_watchdog
-        pico_neopixel
         SH1106_oled
         tinyusb_device
         tinyusb_board
-        pico_multicore
-        pico_bootrom
-        pico_usb_reset_interface
-        #        pico_bootsel_via_double_reset
         )
 
 target_include_directories(Macropad PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include)

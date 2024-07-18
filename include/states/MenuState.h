@@ -21,7 +21,6 @@ public:
     void Key3(bool rising, bool falling) override;
     void Key4(bool rising, bool falling) override;
     void Key5(bool rising, bool falling) override;
-    void Key6(bool rising, bool falling) override;
 
     void EncoderHandler() override;
     void EncoderPress(bool rising, bool falling) override;
