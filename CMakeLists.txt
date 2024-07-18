@@ -11,6 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 # set(PICO_SDK_PATH "/home/cameron/makerstuff/pico/pico-sdk")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
+set(PICO_BOARD "adafruit_macropad_rp2040")
 include(pico_sdk_import.cmake)
 
 project(Macropad C CXX ASM)

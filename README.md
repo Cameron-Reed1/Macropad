@@ -2,7 +2,7 @@
 
 ```
 mkdir build
-cmake -DPICO_BOARD=adafruit_macropad_rp2040 -S . -D build
+cmake -S . -D build
 cmake --build build
 ```
 
