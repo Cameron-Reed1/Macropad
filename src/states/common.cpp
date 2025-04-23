@@ -47,6 +47,15 @@ void encoder_volume(int last_position, int new_position)
     }
 }
 
+void encoder_brightness(int last_position, int new_position)
+{
+    if (new_position - last_position > 0) {
+        Macropad::get_instance().send_vendor_cmd(0x0000, 0x0001);
+    } else if (new_position - last_position < 0) {
+        Macropad::get_instance().send_vendor_cmd(0x0000, 0x0000);
+    }
+}
+
 void toggle_mute(bool rising, bool falling)
 {
     if (rising) {

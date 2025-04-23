@@ -81,7 +81,11 @@ void GenericState::Key12(bool rising, bool falling)
 
 void GenericState::EncoderHandler()
 {
-    encoder_volume(m_EncoderLastPosition, m_EncoderPosition);
+    if (Macropad::get_instance().get_key_state(9)) {
+        encoder_brightness(m_EncoderLastPosition, m_EncoderPosition);
+    } else {
+        encoder_volume(m_EncoderLastPosition, m_EncoderPosition);
+    }
 }
 
 void GenericState::EncoderPress(bool rising, bool falling)

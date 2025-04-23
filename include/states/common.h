@@ -8,6 +8,7 @@
 void ripple(uint8_t key, bool rising, bool falling);
 void return_to_parent_state(bool rising, bool falling);
 void encoder_volume(int last_position, int new_position);
+void encoder_brightness(int last_position, int new_position);
 void toggle_mute(bool rising, bool falling);
 
 
