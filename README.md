@@ -2,7 +2,7 @@
 
 ```
 mkdir build
-cmake -S . -D build
+cmake -S . -B build
 cmake --build build
 ```
 
