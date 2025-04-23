@@ -81,7 +81,7 @@ bool MacropadState::get_update_on_key_press()
 
 void MacropadState::Activate()
 {
-    Macropad::get_instance().set_macropad_state(this);
+    macropad::LoadState(this);
 }
 
 

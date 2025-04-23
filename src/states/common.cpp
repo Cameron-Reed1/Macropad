@@ -28,7 +28,7 @@ void return_to_parent_state(bool rising, bool falling)
     (void) rising;
 
     if (falling) {
-        Macropad::get_instance().load_parent_state();
+        macropad::LoadParentState();
     }
 }
 
@@ -36,13 +36,13 @@ void encoder_volume(int last_position, int new_position)
 {
     static bool key_pressed = false;
     if (new_position - last_position > 0) {
-        Macropad::get_instance().press_consumer_key(HID_USAGE_CONSUMER_VOLUME_INCREMENT);
+        macropad::PressConsumerKey(HID_USAGE_CONSUMER_VOLUME_INCREMENT);
         key_pressed = true;
     } else if (new_position - last_position < 0) {
-        Macropad::get_instance().press_consumer_key(HID_USAGE_CONSUMER_VOLUME_DECREMENT);
+        macropad::PressConsumerKey(HID_USAGE_CONSUMER_VOLUME_DECREMENT);
         key_pressed = true;
     } else if (key_pressed) {
-        Macropad::get_instance().release_consumer_keys();
+        macropad::ReleaseConsumerKeys();
         key_pressed = false;
     }
 }
@@ -50,18 +50,18 @@ void encoder_volume(int last_position, int new_position)
 void encoder_brightness(int last_position, int new_position)
 {
     if (new_position - last_position > 0) {
-        Macropad::get_instance().send_vendor_cmd(0x0000, 0x0001);
+        macropad::SendVendorCmd(0x0000, 0x0001);
     } else if (new_position - last_position < 0) {
-        Macropad::get_instance().send_vendor_cmd(0x0000, 0x0000);
+        macropad::SendVendorCmd(0x0000, 0x0000);
     }
 }
 
 void toggle_mute(bool rising, bool falling)
 {
     if (rising) {
-        Macropad::get_instance().press_consumer_key(HID_USAGE_CONSUMER_MUTE);
+        macropad::PressConsumerKey(HID_USAGE_CONSUMER_MUTE);
     } else if (falling) {
-        Macropad::get_instance().release_consumer_keys();
+        macropad::ReleaseConsumerKeys();
     }
 }
 

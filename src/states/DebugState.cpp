@@ -76,7 +76,7 @@ void DebugState::Key5(bool rising, bool falling)
 
     if (rising) {
         m_ShowMem = !m_ShowMem;
-        Macropad::get_instance().update_oled();
+        macropad::UpdateOled();
     }
 }
 
@@ -85,7 +85,7 @@ void DebugState::Key6(bool rising, bool falling)
     (void) rising;
 
     if (falling) {
-        Macropad::get_instance().send_vendor_cmd(0x0102, 0x0304);
+        macropad::SendVendorCmd(0x0102, 0x0304);
     }
 }
 
@@ -147,18 +147,16 @@ void AnyKeyState::KeyAny(uint8_t key, bool rising, bool falling)
         return;
     }
 
-    Macropad& macropad = Macropad::get_instance();
-
     if (rising) {
         switch (m_KeyType) {
             case KeyType::NORMAL:
-                macropad.press_key(m_KeyCode);
+                macropad::PressKey(m_KeyCode);
                 break;
             case KeyType::CONSUMER:
-                macropad.press_consumer_key(m_KeyCode);
+                macropad::PressConsumerKey(m_KeyCode);
                 break;
             case KeyType::SYSTEM:
-                macropad.press_system_key(m_KeyCode);
+                macropad::PressSystemKey(m_KeyCode);
                 break;
         }
     }
@@ -166,13 +164,13 @@ void AnyKeyState::KeyAny(uint8_t key, bool rising, bool falling)
     if (falling) {
         switch (m_KeyType) {
             case KeyType::NORMAL:
-                macropad.release_key(m_KeyCode);
+                macropad::ReleaseKey(m_KeyCode);
                 break;
             case KeyType::CONSUMER:
-                macropad.release_consumer_keys();
+                macropad::ReleaseConsumerKeys();
                 break;
             case KeyType::SYSTEM:
-                macropad.release_system_keys();
+                macropad::ReleaseSystemKeys();
                 break;
         }
     }

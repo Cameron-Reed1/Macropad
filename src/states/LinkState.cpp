@@ -17,7 +17,7 @@ void LinkState::Activate()
 {
     Reset();
 
-    Macropad::get_instance().set_macropad_state(this);
+    macropad::LoadState(this);
 }
 
 void LinkState::KeyAny(uint8_t key, bool rising, bool falling)
@@ -523,7 +523,7 @@ void LinkState::Reset()
 
 void LinkState::Cancel()
 {
-    Macropad::get_instance().load_parent_state();
+    macropad::LoadParentState();
 }
 
 void LinkState::Finish()
@@ -536,9 +536,9 @@ void LinkState::Finish()
     m_URL += '/';
     m_URL += std::to_string(m_Selections[2]);
 
-    Macropad::get_instance().load_parent_state();
+    macropad::LoadParentState();
 
-    Macropad::get_instance().type(m_URL.c_str());
+    macropad::Type(m_URL.c_str());
 }
 
 void LinkState::NextPage()
@@ -547,13 +547,14 @@ void LinkState::NextPage()
         return;
     }
 
-    Macropad::get_instance().update_oled();
     m_Offset += 12;
 
     m_FirstPage = false;
     if (m_Offset + 12 >= m_ItemCount) {
         m_LastPage = true;
     }
+
+    macropad::UpdateOled();
 }
 
 void LinkState::PrevPage()
@@ -569,7 +570,7 @@ void LinkState::PrevPage()
         m_FirstPage = true;
     }
 
-    Macropad::get_instance().update_oled();
+    macropad::UpdateOled();
 }
 
 void LinkState::NextStep(uint8_t selection)
@@ -606,7 +607,7 @@ void LinkState::NextStep(uint8_t selection)
             break;
     }
 
-    Macropad::get_instance().update_oled();
+    macropad::UpdateOled();
 }
 
 void LinkState::PrevStep()
@@ -636,6 +637,6 @@ void LinkState::PrevStep()
             break;
     }
 
-    Macropad::get_instance().update_oled();
+    macropad::UpdateOled();
 }
 

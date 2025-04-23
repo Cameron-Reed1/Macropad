@@ -29,7 +29,7 @@ void MenuState::Key1(bool rising, bool falling)
     (void) rising;
 
     if (falling) {
-        if (Macropad::get_instance().ComputerID == FRAMEWORK_KDE) {
+        if (macropad::ComputerID == FRAMEWORK_KDE) {
             timerState.Activate();
         } else {
             teamsState.Activate();
@@ -87,18 +87,16 @@ void MenuState::EncoderPress(bool rising, bool falling)
 
 void MenuState::OledDraw(SH1106_SPI oled)
 {
-    Macropad& macropad = Macropad::get_instance();
-
     oled.gotoXY(0, 0);
     oled.print("Encoder Position: ");
-    oled.print(macropad.get_encoder_position());
+    oled.print(macropad::Encoder.getPosition());
 
     oled.gotoXY(0, 1);
-    if (macropad.ComputerID == FRAMEWORK_KDE) {
+    if (macropad::ComputerID == FRAMEWORK_KDE) {
         oled.print("Hello, Cameron");
-    } else if (macropad.ComputerID != 0) {
+    } else if (macropad::ComputerID != 0) {
         oled.print("Computer ID: ");
-        oled.print(macropad.ComputerID);
+        oled.print(macropad::ComputerID);
     }
 
 
@@ -113,7 +111,7 @@ void MenuState::OledDraw(SH1106_SPI oled)
     oled.print(cfg_saved->brightness); */
 
     for (int i = 0; i < NUM_KEYS; i++) {
-        if (macropad.get_key_state(i)) {
+        if (macropad::Keys[i].Pressed()) {
             oled.gotoXY((i % 3) * 48, (i / 3) + 4);
             oled.print("KEY");
             oled.print(i + 1);

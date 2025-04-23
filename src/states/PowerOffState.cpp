@@ -19,12 +19,11 @@ void PowerOffState::KeyAny(uint8_t key, bool rising, bool falling)
 
 void PowerOffState::Key12(bool rising, bool falling)
 {
-    Macropad& macropad = Macropad::get_instance();
     if (rising) {
-        macropad.press_system_key(HID_USAGE_DESKTOP_SYSTEM_POWER_DOWN);
+        macropad::PressSystemKey(HID_USAGE_DESKTOP_SYSTEM_POWER_DOWN);
     } else if (falling) {
-        macropad.release_system_keys();
-        macropad.load_parent_state();
+        macropad::ReleaseSystemKeys();
+        macropad::LoadParentState();
     }
 }
 

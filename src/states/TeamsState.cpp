@@ -29,7 +29,7 @@ void TeamsState::Key7(bool rising, bool falling)
     }
 
     if (rising) {
-        Macropad::get_instance().play_macro(macro);
+        macropad::PlayMacro(macro);
     }
 }
 

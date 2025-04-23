@@ -15,33 +15,33 @@ void toggle_mute(bool rising, bool falling);
 template <uint8_t key>
 void press_key(bool rising, bool falling) {
     if (rising) {
-        Macropad::get_instance().press_key(key);
+        macropad::PressKey(key);
     } else if (falling) {
-        Macropad::get_instance().release_key(key);
+        macropad::ReleaseKey(key);
     }
 }
 
 template <uint8_t key1, uint8_t key2>
 void press_keys(bool rising, bool falling) {
     if (rising) {
-        Macropad::get_instance().press_key(key1);
-        Macropad::get_instance().press_key(key2);
+        macropad::PressKey(key1);
+        macropad::PressKey(key2);
     } else if (falling) {
-        Macropad::get_instance().release_key(key1);
-        Macropad::get_instance().release_key(key2);
+        macropad::ReleaseKey(key1);
+        macropad::ReleaseKey(key2);
     }
 }
 
 template <uint8_t key1, uint8_t key2, uint8_t key3>
 void press_keys(bool rising, bool falling) {
     if (rising) {
-        Macropad::get_instance().press_key(key1);
-        Macropad::get_instance().press_key(key2);
-        Macropad::get_instance().press_key(key3);
+        macropad::PressKey(key1);
+        macropad::PressKey(key2);
+        macropad::PressKey(key3);
     } else if (falling) {
-        Macropad::get_instance().release_key(key1);
-        Macropad::get_instance().release_key(key2);
-        Macropad::get_instance().release_key(key3);
+        macropad::ReleaseKey(key1);
+        macropad::ReleaseKey(key2);
+        macropad::ReleaseKey(key3);
     }
 }
 
@@ -49,9 +49,9 @@ template <uint16_t key>
 void press_consumer_key(bool rising, bool falling)
 {
     if (rising) {
-        Macropad::get_instance().press_consumer_key(key);
+        macropad::PressConsumerKey(key);
     } else if (falling) {
-        Macropad::get_instance().release_consumer_keys();
+        macropad::ReleaseConsumerKeys();
     }
 }
 
@@ -59,9 +59,9 @@ template <uint16_t key>
 void press_system_key(bool rising, bool falling)
 {
     if (rising) {
-        Macropad::get_instance().press_system_key(key);
+        macropad::PressSystemKey(key);
     } else if (falling) {
-        Macropad::get_instance().release_system_keys();
+        macropad::ReleaseSystemKeys();
     }
 }
 
@@ -71,7 +71,7 @@ void type(bool rising, bool falling)
     (void) falling;
 
     if (rising) {
-        Macropad::get_instance().type(str);
+        macropad::Type(str);
     }
 }
 

@@ -64,15 +64,15 @@ void tud_umount_cb(void) { }
 void tud_suspend_cb(bool remote_wakeup_en)
 {
     suspendedState.wakeup = remote_wakeup_en;
-    suspendedState.set_parent_state(Macropad::get_instance().get_macropad_state());
+    suspendedState.set_parent_state(macropad::state);
     suspendedState.Activate();
     suspendedState.set_pixels_brightness(5);
-    suspendedState.set_pixel_color(1, Macropad::get_instance().pixelColor(0, 255 * (remote_wakeup_en ? 1 : 0), 0));
+    suspendedState.set_pixel_color(1, macropad::Pixels.Color(0, 255 * (remote_wakeup_en ? 1 : 0), 0));
 }
 
 void tud_resume_cb(void)
 {
-    Macropad::get_instance().load_parent_state();
+    macropad::LoadParentState();
 }
 
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen)
@@ -94,7 +94,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
         if (report_id == REPORT_ID_KEYBOARD) {
             if ( bufsize < 1 ) return;
 
-            Macropad::get_instance().kbd_leds = buffer[0];
+            // macropad::.kbd_leds = buffer[0];
         }
     }
 }
@@ -122,25 +122,24 @@ bool reset_control_cb(uint8_t stage, const tusb_control_request_t* request)
 
 bool vendor_in_control_cb(uint8_t rhport, uint8_t stage, const tusb_control_request_t* request)
 {
-    Macropad& macropad = Macropad::get_instance();
     uint8_t num;
 
     switch (request->bRequest) {
     case VENDOR_REQ_IN_GET_CMD_NUM:
         if (stage == CONTROL_STAGE_SETUP) {
-            return tud_control_xfer(rhport, request, &macropad.VendorCmdCount, sizeof(macropad.VendorCmdCount));
+            return tud_control_xfer(rhport, request, &macropad::VendorCmdCount, sizeof(macropad::VendorCmdCount));
         } else {
             return true;
         }
     case VENDOR_REQ_IN_GET_CMDS:
         if (stage == CONTROL_STAGE_SETUP) {
-            if (request->wLength % sizeof(uint32_t) == 0
-                    && request->wLength <= sizeof(macropad.VendorCmds[0]) * macropad.VendorCmdCount) {
-                return tud_control_xfer(rhport, request, macropad.VendorCmds, request->wLength);
+            if (request->wLength % sizeof(macropad::VendorCmds[0]) == 0
+                    && request->wLength <= sizeof(macropad::VendorCmds[0]) * macropad::VendorCmdCount) {
+                return tud_control_xfer(rhport, request, macropad::VendorCmds, request->wLength);
             }
         } else if (stage == CONTROL_STAGE_DATA) {
-            if (request->wLength % sizeof(uint32_t) == 0) {
-                macropad.clear_vendor_cmds(request->wLength / sizeof(uint32_t));
+            if (request->wLength % sizeof(macropad::VendorCmds[0]) == 0) {
+                macropad::ClearVendorCmds(request->wLength / sizeof(macropad::VendorCmds[0]));
                 return true;
             }
         } else {
@@ -158,19 +157,17 @@ bool vendor_out_control_cb(uint8_t stage, const tusb_control_request_t* request)
     if (stage != CONTROL_STAGE_SETUP) return true;
 
 
-    Macropad& macropad = Macropad::get_instance();
-
     switch (request->bRequest) {
     case VENDOR_REQ_OUT_SET_ID:
-        if (macropad.ComputerID != request->wValue) {
-            macropad.ComputerID = request->wValue;
-            macropad.update_oled();
+        if (macropad::ComputerID != request->wValue) {
+            macropad::ComputerID = request->wValue;
+            macropad::UpdateOled();
         }
         return true;
     case VENDOR_REQ_OUT_SET_CFG:
         if (request->wValue < NUM_SLOTS) {
             Config::switchSlot(request->wValue);
-            macropad.update_oled();
+            macropad::UpdateOled();
             return true;
         }
     }

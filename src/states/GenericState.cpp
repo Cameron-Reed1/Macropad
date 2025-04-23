@@ -22,7 +22,7 @@ void GenericState::Key1(bool rising, bool falling)
 
 void GenericState::Key2(bool rising, bool falling)
 {
-    if (Macropad::get_instance().ComputerID == FRAMEWORK_KDE) {
+    if (macropad::ComputerID == FRAMEWORK_KDE) {
         press_keys<HID_KEY_GUI_LEFT, HID_KEY_ESCAPE>(rising, falling);
     } else {
         press_keys<HID_KEY_GUI_LEFT, HID_KEY_L>(rising, falling);
@@ -62,7 +62,7 @@ void GenericState::Key8(bool rising, bool falling)
 void GenericState::Key9(bool rising, bool falling)
 {
     // Open Settings
-    if (Macropad::get_instance().ComputerID == FRAMEWORK_KDE) {
+    if (macropad::ComputerID == FRAMEWORK_KDE) {
         press_consumer_key<HID_USAGE_CONSUMER_AL_CONSUMER_CONTROL_CONFIGURATION>(rising, falling);
     } else {
         press_keys<HID_KEY_GUI_LEFT, HID_KEY_I>(rising, falling);
@@ -81,7 +81,7 @@ void GenericState::Key12(bool rising, bool falling)
 
 void GenericState::EncoderHandler()
 {
-    if (Macropad::get_instance().get_key_state(9)) {
+    if (macropad::Keys[9].Pressed()) {
         encoder_brightness(m_EncoderLastPosition, m_EncoderPosition);
     } else {
         encoder_volume(m_EncoderLastPosition, m_EncoderPosition);

@@ -37,7 +37,7 @@ CFG defaults = {
     .colorOutR = 0x00,
     .colorOutG = 0xFF,
     .colorOutB = 0xFF,
-    
+
     .colorInR = 0x00,
     .colorInG = 0xFF,
     .colorInB = 0x00,

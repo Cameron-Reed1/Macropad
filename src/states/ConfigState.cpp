@@ -17,7 +17,7 @@ ConfigState::ConfigState(MacropadState* parent)
 void ConfigState::Activate()
 {
     m_ActiveValue = ConfigValue::None;
-    Macropad::get_instance().set_macropad_state(this);
+    macropad::LoadState(this);
 }
 
 
@@ -35,7 +35,7 @@ void ConfigState::Key1(bool rising, bool falling)
     }
 
     if (falling) {
-        Macropad::get_instance().load_parent_state();
+        macropad::LoadParentState();
     }
 }
 
@@ -99,21 +99,24 @@ void ConfigState::EncoderHandler()
         return;
     }
 
-    Macropad& macropad = Macropad::get_instance();
     CFG* cfg = Config::get();
 
     if (m_EncoderPosition < 0) {
-        macropad.set_encoder_position(0);
+        macropad::Encoder.setPosition(0);
+        macropad::state->set_encoder_position(0);
     } else if (m_EncoderPosition > 255) {
-        macropad.set_encoder_position(255);
+        macropad::Encoder.setPosition(255);
+        macropad::state->set_encoder_position(255);
     }
 
     switch (m_ActiveValue) {
         case ConfigValue::Slot:
             if (m_EncoderPosition < 1) {
-                macropad.set_encoder_position(1);
+                macropad::Encoder.setPosition(1);
+                macropad::state->set_encoder_position(1);
             } else if (m_EncoderPosition > NUM_SLOTS) {
-                macropad.set_encoder_position(NUM_SLOTS);
+                macropad::Encoder.setPosition(NUM_SLOTS);
+                macropad::state->set_encoder_position(NUM_SLOTS);
             }
             break;
         case ConfigValue::Brightness:
@@ -223,36 +226,44 @@ void ConfigState::SwitchActive(bool rising, bool falling)
             m_ActiveValue = val;
         }
 
-        Macropad& macropad = Macropad::get_instance();
         CFG* cfg = Config::get();
 
         switch (m_ActiveValue) {
             case ConfigValue::Slot:
-                macropad.set_encoder_position(Config::getSlot() + 1);
+                macropad::Encoder.setPosition(Config::getSlot() + 1);
+                macropad::state->set_encoder_position(Config::getSlot() + 1);
                 break;
             case ConfigValue::Brightness:
-                macropad.set_encoder_position(cfg->brightness);
+                macropad::Encoder.setPosition(cfg->brightness);
+                macropad::state->set_encoder_position(cfg->brightness);
                 break;
             case ConfigValue::ColorOutR:
-                macropad.set_encoder_position(cfg->colorOutR);
+                macropad::Encoder.setPosition(cfg->colorOutR);
+                macropad::state->set_encoder_position(cfg->colorOutR);
                 break;
             case ConfigValue::ColorOutG:
-                macropad.set_encoder_position(cfg->colorOutG);
+                macropad::Encoder.setPosition(cfg->colorOutG);
+                macropad::state->set_encoder_position(cfg->colorOutG);
                 break;
             case ConfigValue::ColorOutB:
-                macropad.set_encoder_position(cfg->colorOutB);
+                macropad::Encoder.setPosition(cfg->colorOutB);
+                macropad::state->set_encoder_position(cfg->colorOutB);
                 break;
             case ConfigValue::ColorInR:
-                macropad.set_encoder_position(cfg->colorInR);
+                macropad::Encoder.setPosition(cfg->colorInR);
+                macropad::state->set_encoder_position(cfg->colorInR);
                 break;
             case ConfigValue::ColorInG:
-                macropad.set_encoder_position(cfg->colorInG);
+                macropad::Encoder.setPosition(cfg->colorInG);
+                macropad::state->set_encoder_position(cfg->colorInG);
                 break;
             case ConfigValue::ColorInB:
-                macropad.set_encoder_position(cfg->colorInB);
+                macropad::Encoder.setPosition(cfg->colorInB);
+                macropad::state->set_encoder_position(cfg->colorInB);
                 break;
             case ConfigValue::None:
-                macropad.set_encoder_position(0);
+                macropad::Encoder.setPosition(0);
+                macropad::state->set_encoder_position(0);
                 break;
         }
     }

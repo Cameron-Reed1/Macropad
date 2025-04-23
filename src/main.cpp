@@ -6,17 +6,16 @@
 
 int main(void)
 {
-    Macropad& macropad = Macropad::get_instance();
-    MenuState menuState = MenuState();
+    MenuState menuState;
     CFG* cfg = Config::read();
 
-    macropad.init(true, true, true, false, false, true, false);
+    macropad::init(true, true, true, false, true);
     menuState.Activate();
     ripple_anim_setup();
     ripple_anim_set_brightness(cfg->brightness);
 
     while (true) {
-        macropad.run();
+        macropad::tick();
     }
 
     return 0;

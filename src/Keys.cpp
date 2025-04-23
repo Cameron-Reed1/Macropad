@@ -1,34 +1,31 @@
-#include <pico/stdlib.h>
+#include <hardware/gpio.h>
 #include "Keys.h"
 
-Keys::Keys(uint8_t keyCount, bool defaultHigh /* = false */, uint8_t firstGPIO /* = 1 */)
-    : m_DefaultHigh(defaultHigh), m_KeyCount(keyCount), m_FirstGPIO(firstGPIO) { }
 
-void Keys::update(void) {
-    m_OldValues = m_Values;
-    m_Values = 0;
-    for (uint8_t i = 0; i < m_KeyCount; i++) {
-        bool gpioState = gpio_get(i + m_FirstGPIO);
-        m_Values |= (m_DefaultHigh ? !gpioState : gpioState) << i;
+Key::Key(uint8_t pin, bool active_low /* = true */)
+    : m_ActiveLow(active_low), m_Pin(pin), m_State(0) { }
+
+void Key::Update()
+{
+    m_State = m_State << 1;
+    bool new_state = gpio_get(m_Pin);
+    if (m_ActiveLow) {
+        new_state = !new_state;
     }
+    m_State |= new_state;
 }
 
-bool Keys::haveChanged(void) {
-    return m_Values != m_OldValues;
+bool Key::Pressed()
+{
+    return (m_State & 1) != 0;
 }
 
-bool Keys::getKeyValue(uint8_t keyNum) {
-    return m_Values & (1 << keyNum);
+bool Key::RisingEdge()
+{
+    return (m_State & 0b11) == 0b01;
 }
 
-bool Keys::getKeyLastValue(uint8_t keyNum) {
-    return m_OldValues & (1 << keyNum);
-}
-
-bool Keys::getKeyRisingEdge(uint8_t keyNum) {
-    return m_Values & (1 << keyNum) && !(m_OldValues & (1 << keyNum));
-}
-
-bool Keys::getKeyFallingEdge(uint8_t keyNum) {
-    return !(m_Values & (1 << keyNum)) && m_OldValues & (1 << keyNum);
+bool Key::FallingEdge()
+{
+    return (m_State & 0b11) == 0b10;
 }

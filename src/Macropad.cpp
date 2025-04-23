@@ -5,65 +5,64 @@
 #include <hardware/i2c.h>
 #include <hardware/spi.h>
 #include <hardware/watchdog.h>
+#include <pico/time.h>
 #include <tusb.h>
 #include <bsp/board.h>
+#include "class/hid/hid.h"
 #include "usb_descriptors.h"
 #include "Macropad.h"
 #include "PinDefs.h"
 #include "Keys.h"
 
+
 uint8_t const ascii_to_keycode_conv[128][2] =  { HID_ASCII_TO_KEYCODE };
-Macropad Macropad::s_Instance;
 
-Macropad::Macropad()
-    : m_Keys(NUM_KEYS, true), m_Oled(SPI_PORT), m_State(nullptr), m_Encoder(ROTA, ROTB, RotaryEncoder::LatchMode::FOUR3),
-    m_Pixels(NUM_PIXELS, NEOPIXEL, NEO_GRB + NEO_KHZ800)
-{}
 
-Macropad& Macropad::get_instance()
-{
-    return s_Instance;
-}
+namespace macropad {
 
-void Macropad::init(bool init_tinyUSB, bool init_keys, bool init_oled, bool init_speaker, bool init_pixels, bool init_encoder, bool init_stemma)
-{
-    if (init_tinyUSB) {
-        this->init_tinyUSB();
-    }
+MacropadState* state;
+SH1106_SPI Oled(SPI_PORT);
+Adafruit_NeoPixel Pixels(NUM_PIXELS, NEOPIXEL, NEO_GRB + NEO_KHZ800);
+RotaryEncoder Encoder(ROTA, ROTB, RotaryEncoder::LatchMode::FOUR3);
+Key EncoderBtn(ENCODER_BUTTON);
+Key Keys[NUM_KEYS] = { Key(KEY1),  Key(KEY2),  Key(KEY3),
+                       Key(KEY4),  Key(KEY5),  Key(KEY6),
+                       Key(KEY7),  Key(KEY8),  Key(KEY9),
+                       Key(KEY10), Key(KEY11), Key(KEY12) };
 
-    if (init_keys) {
-        this->init_keys();
-    }
+uint32_t VendorCmds[VENDOR_CMD_QUEUE_LEN] = { 0 };
+uint8_t VendorCmdCount = 0;
+uint8_t KeysPressed[6] = { 0 };
+uint8_t TimesPressed[6] = { 0 };
 
-    if (init_speaker) {
-        this->init_speaker();
-    }
+uint16_t ConsumerReport = 0;
+bool ConsumerReportQueued = 0;
 
-    if (init_encoder) {
-        this->init_encoder();
-    }
+uint16_t SystemReport = 0;
+bool SystemReportQueued = false;
+Macro* RunningMacro = nullptr;
+uint32_t ComputerID = 0;
 
-    if (init_oled) {
-        this->init_oled();
-    }
+bool use_encoder = false;
+bool use_usb = false;
+bool use_keys = false;
+bool use_oled = false;
+bool use_pixels = false;
 
-    if (init_pixels) {
-        this->init_pixels();
-    }
+bool update_oled = false;
 
-    if (init_stemma) {
-        this->init_stemma();
-    }
-}
+void gpio_callback(uint gpio, uint32_t events);
 
-void Macropad::init_tinyUSB()
+
+void init_usb()
 {
     board_init();
     tusb_init();
-    m_UseTinyUSB = true;
+
+    use_usb = true;
 }
 
-void Macropad::init_keys()
+void init_keys()
 {
     bi_decl_if_func_used(bi_pin_mask_with_name(0x0fff << KEY1, "Keys"));
 
@@ -106,10 +105,10 @@ void Macropad::init_keys()
     gpio_pull_up(KEY11);
     gpio_pull_up(KEY12);
 
-    m_UseKeys = true;
+    use_keys = true;
 }
 
-void Macropad::init_oled()
+void init_oled()
 {
     bi_decl_if_func_used(bi_3pins_with_names(PIN_CS, "Oled Chip Select", PIN_RESET, "Oled reset", PIN_DC, "Oled Data/Command"));
     bi_decl_if_func_used(bi_3pins_with_names(PIN_SCK, "Oled clock", PIN_MOSI, "Oled MOSI", PIN_MISO, "Oled MISO"));
@@ -124,55 +123,12 @@ void Macropad::init_oled()
 
     gpio_put(PIN_CS, 1);
 
-    m_Oled.begin();
+    Oled.begin();
 
-    m_UseOled = true;
+    use_oled = true;
 }
 
-void Macropad::init_speaker()
-{
-    bi_decl_if_func_used(bi_2pins_with_names(SPEAKER, "Speaker", SPEAKER_ENABLE, "Speaker enable"));
-
-    gpio_init(SPEAKER_ENABLE);
-    gpio_init(SPEAKER);
-
-    gpio_set_dir(SPEAKER_ENABLE, GPIO_OUT);
-    gpio_set_dir(SPEAKER, GPIO_OUT);
-
-    gpio_set_function(SPEAKER, GPIO_FUNC_PWM);
-
-    m_SpeakerSliceNum = pwm_gpio_to_slice_num(SPEAKER);
-    m_SpeakerSliceChan = pwm_gpio_to_channel(SPEAKER);
-    pwm_config cfg = pwm_get_default_config();
-    pwm_config_set_clkdiv(&cfg, 133);
-    pwm_config_set_wrap(&cfg, (uint16_t) (MEGAHERTZ / 5));
-    pwm_init(m_SpeakerSliceNum, &cfg, false);
-
-    m_UseSpeaker = true;
-}
-
-
-void Macropad::init_pixels()
-{
-    bi_decl_if_func_used(bi_1pin_with_name(NEOPIXEL, "Neopixel"));
-
-    gpio_init(LED);
-    gpio_init(NEOPIXEL);
-
-    gpio_set_dir(LED, GPIO_OUT);
-    gpio_set_dir(NEOPIXEL, GPIO_OUT);
-
-    m_Pixels.begin();
-    m_Pixels.setBrightness(m_State->get_pixels_brightness());
-    for (uint8_t i = 0; i < NUM_PIXELS; i++) {
-        m_Pixels.setPixelColor(i, m_State->get_pixel_color(i));
-    }
-    m_Pixels.show();
-
-    m_UsePixels = true;
-}
-
-void Macropad::init_encoder()
+void init_encoder()
 {
     bi_decl_if_func_used(bi_3pins_with_names(ENCODER_BUTTON, "Rotary encoder press", ROTA, "Rotary encoder A", ROTB, "Rotary encoder B"));
 
@@ -187,175 +143,67 @@ void Macropad::init_encoder()
     gpio_set_irq_enabled_with_callback(ROTA, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
     gpio_set_irq_enabled(ROTB, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
 
-    m_Encoder.tick();
+    Encoder.tick();
 
-    m_UseEncoder = true;
+    use_encoder = true;
 }
 
-void Macropad::init_stemma()
+void init_pixels()
 {
-    bi_decl_if_func_used(bi_2pins_with_names(STEMMA_SDA, "Stemma data", STEMMA_SCL, "Stemma clock"));
+    bi_decl_if_func_used(bi_1pin_with_name(NEOPIXEL, "Neopixel"));
 
-    gpio_init(STEMMA_SDA);
-    gpio_init(STEMMA_SCL);
+    gpio_init(LED);
+    gpio_init(NEOPIXEL);
 
-    gpio_set_dir(STEMMA_SDA, GPIO_OUT);
-    gpio_set_dir(STEMMA_SCL, GPIO_OUT);
+    gpio_set_dir(LED, GPIO_OUT);
+    gpio_set_dir(NEOPIXEL, GPIO_OUT);
 
-    m_UseStemma = true;
-}
-
-MacropadState* Macropad::get_macropad_state()
-{
-    return m_State;
-}
-
-bool Macropad::get_key_state(uint8_t key)
-{
-    if (!m_UseKeys) {
-        return false;
-    }
-
-    return m_Keys.getKeyValue(key);
-}
-
-int Macropad::get_encoder_position()
-{
-    if (!m_UseEncoder) {
-        return 0;
-    }
-
-    return m_State->get_encoder_position();
-}
-
-void Macropad::set_encoder_position(int new_position)
-{
-    if (!m_UseEncoder) {
-        return;
-    }
-
-    m_State->set_encoder_position(new_position);
-    m_Encoder.setPosition(new_position);
-}
-
-void Macropad::run()
-{
-    m_StateChanged = false;
-
-    if (m_UseEncoder) {
-        run_encoder();
-    }
-
-    if (m_UseKeys) {
-        run_keys();
-    }
-
-    if (m_UsePixels && m_Pixels.canShow()) {
-        run_pixels();
-    }
-
-    if (m_UseOled && m_UpdateOled) {
-        run_oled();
-    }
-
-    if (m_UseTinyUSB) {
-        run_tinyUSB();
-    }
-
-    sleep_ms(10);
-}
-
-void Macropad::run_encoder()
-{
-    m_State->set_encoder_position(m_Encoder.getPosition());
-    m_EncoderPressed = !gpio_get(ENCODER_BUTTON);
-    m_State->EncoderHandler();
-
-    if (m_EncoderPressed != m_EncoderWasPressed && !m_StateChanged) {
-        m_State->EncoderPress(m_EncoderPressed, m_EncoderWasPressed);
-        m_UpdateOled = m_UpdateOled || m_State->get_update_on_encoder_press();
-    }
-
-    if (m_State->get_encoder_position() != m_State->get_encoder_last_postition() && !m_StateChanged) {
-        m_UpdateOled = m_UpdateOled || m_State->get_update_on_encoder_move();
-    }
-
-    m_EncoderWasPressed = m_EncoderPressed;
-}
-
-void Macropad::run_keys()
-{
-    m_Keys.update();
-
-    if (m_Keys.haveChanged()) {
-        m_UpdateOled = m_UpdateOled || m_State->get_update_on_key_press();
-
-        for (uint8_t i = 0; i < NUM_KEYS; i++) {
-            bool rising = m_Keys.getKeyRisingEdge(i);
-            bool falling = m_Keys.getKeyFallingEdge(i);
-
-            if (rising || falling) {
-                m_State->Key(i, rising, falling);
-            }
-        }
-    }
-}
-
-void Macropad::run_pixels()
-{
+    Pixels.begin();
+    Pixels.setBrightness(state->get_pixels_brightness());
     for (uint8_t i = 0; i < NUM_PIXELS; i++) {
-        m_Pixels.setPixelColor(i, m_State->get_pixel_color(i));
+        Pixels.setPixelColor(i, state->get_pixel_color(i));
     }
+    Pixels.show();
 
-    if (m_Pixels.getBrightness() != m_State->get_pixels_brightness()) {
-        m_Pixels.setBrightness(m_State->get_pixels_brightness());
-    }
-
-    m_Pixels.show();
+    use_pixels = true;
 }
 
-void Macropad::run_oled()
+void init(bool tinyUSB, bool keys, bool encoder, bool pixels, bool oled)
 {
-    m_Oled.clear();
-    m_State->OledDraw(m_Oled);
-    m_UpdateOled = false;
-}
-
-void Macropad::run_tinyUSB()
-{
-    tud_task();
-    while (!tud_hid_ready() && (m_KeysPressed[0] != HID_KEY_NONE || m_ConsumerReportQueued || m_SystemReportQueued || m_RunningMacro) && tud_mounted()) {
-        tud_task();
+    if (tinyUSB) {
+        init_usb();
     }
 
-    if (tud_hid_ready()) {
-        if (m_RunningMacro) {
-            run_macroStep();
-        } else if (m_SystemReportQueued) {
-            tud_hid_report(REPORT_ID_SYSTEM_CONTROL, &m_SystemReport, sizeof(m_SystemReport));
-            m_SystemReportQueued = false;
-        } else if (m_ConsumerReportQueued) {
-            tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &m_ConsumerReport, sizeof(m_ConsumerReport));
-            m_ConsumerReportQueued = false;
-        } else {
-            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_KeysPressed);
-        }
+    if (keys) {
+        init_keys();
+    }
+
+    if (encoder) {
+        init_encoder();
+    }
+
+    if (pixels) {
+        init_pixels();
+    }
+
+    if (oled) {
+        init_oled();
     }
 }
 
-void Macropad::run_macroStep()
+void tick_macroStep()
 {
     // Clear all pressed keys
-    if (m_KeysPressed[0] != HID_KEY_NONE) {
+    if (KeysPressed[0] != HID_KEY_NONE) {
         for (uint8_t i = 0; i < 6; i++) {
-            m_KeysPressed[i] = HID_KEY_NONE;
-            m_TimesPressed[i] = 0;
+            KeysPressed[i] = HID_KEY_NONE;
+            TimesPressed[i] = 0;
         }
-        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_KeysPressed);
+        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, KeysPressed);
         return;
     }
 
-    MacroStep& step = m_RunningMacro->getStep();
+    MacroStep& step = RunningMacro->getStep();
     uint8_t* keys;
     switch (step.step_type) {
         case TYPE_KEY_PRESS:
@@ -364,12 +212,12 @@ void Macropad::run_macroStep()
             while (!tud_hid_ready()) {
                 tud_task();
             }
-            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, m_KeysPressed);
-            m_RunningMacro->nextStep();
+            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, KeysPressed);
+            RunningMacro->nextStep();
             break;
         case TYPE_TYPE_STRING:
-            this->type(reinterpret_cast<char*>(step.data));
-            m_RunningMacro->nextStep();
+            Type(reinterpret_cast<char*>(step.data));
+            RunningMacro->nextStep();
             break;
         case TYPE_SLEEP:
             static bool sleep_started = false;
@@ -380,58 +228,264 @@ void Macropad::run_macroStep()
             }
             if (absolute_time_diff_us(sleep_start_time, get_absolute_time()) >= step.data * 1000) {
                 sleep_started = false;
-                m_RunningMacro->nextStep();
+                RunningMacro->nextStep();
             }
     }
 
-    if (m_RunningMacro->finished()) {
-        m_RunningMacro = nullptr;
+    if (RunningMacro->finished()) {
+        RunningMacro = nullptr;
     }
 }
 
-void Macropad::encoder_tick()
+void tick_usb()
 {
-    m_Encoder.tick();
-}
-
-void Macropad::update_oled()
-{
-    if (!m_UseOled) {
-        return;
+    tud_task();
+    while (!tud_hid_ready() && (KeysPressed[0] != HID_KEY_NONE || ConsumerReportQueued || SystemReportQueued || RunningMacro) && tud_mounted()) {
+        tud_task();
     }
 
-    m_UpdateOled = true;
+    if (tud_hid_ready()) {
+        if (RunningMacro) {
+            tick_macroStep();
+        } else if (SystemReportQueued) {
+            tud_hid_report(REPORT_ID_SYSTEM_CONTROL, &SystemReport, sizeof(SystemReport));
+            SystemReportQueued = false;
+        } else if (ConsumerReportQueued) {
+            tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &ConsumerReport, sizeof(ConsumerReport));
+            ConsumerReportQueued = false;
+        } else {
+            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, KeysPressed);
+        }
+    }
 }
 
-void Macropad::set_macropad_state(MacropadState* newState)
+void tick_encoder()
 {
-    m_State = newState;
-    m_UpdateOled = true;
-    m_Encoder.setPosition(m_State->get_encoder_position());
-    m_StateChanged = true;
+    EncoderBtn.Update();
+    state->set_encoder_position(Encoder.getPosition());
+    state->EncoderHandler();
+
+    bool rising = EncoderBtn.RisingEdge();
+    bool falling = EncoderBtn.FallingEdge();
+
+    if (rising || falling) {
+        state->EncoderPress(rising, falling);
+        update_oled = update_oled || state->get_update_on_encoder_press();
+    }
+
+    if (Encoder.getDirection() != RotaryEncoder::Direction::NOROTATION) {
+        update_oled = update_oled || state->get_update_on_encoder_move();
+    }
+}
+
+void tick_keys()
+{
+    for (uint8_t i = 0; i < NUM_KEYS; i++) {
+        Key& key = Keys[i];
+        key.Update();
+
+        bool rising = key.RisingEdge();
+        bool falling = key.FallingEdge();
+
+        if (rising || falling) {
+            state->Key(i, rising, falling);
+            update_oled = update_oled || state->get_update_on_key_press();
+        }
+    }
+}
+
+void tick_oled()
+{
+    Oled.clear();
+    state->OledDraw(Oled);
+    update_oled = false;
+}
+
+void tick_pixels()
+{
+    for (uint8_t i = 0; i < NUM_PIXELS; i++) {
+        Pixels.setPixelColor(i, state->get_pixel_color(i));
+    }
+
+    if (Pixels.getBrightness() != state->get_pixels_brightness()) {
+        Pixels.setBrightness(state->get_pixels_brightness());
+    }
+
+    Pixels.show();
+}
+
+void tick()
+{
+    if (use_encoder) {
+        tick_encoder();
+    }
+
+    if (use_keys) {
+        tick_keys();
+    }
+
+    if (use_usb) {
+        tick_usb();
+    }
+
+    if (use_oled && update_oled) {
+        tick_oled();
+    }
+
+    if (use_pixels && Pixels.canShow()) {
+        tick_pixels();
+    }
+
+    sleep_ms(10);
+}
+
+void LoadState(MacropadState* newState)
+{
+    state = newState;
+    update_oled = true;
+    Encoder.setPosition(state->get_encoder_position());
 
     for (uint8_t i = 0; i < 6; i++) {
-        m_KeysPressed[i] = HID_KEY_NONE;
-        m_TimesPressed[i] = 0;
+        KeysPressed[i] = HID_KEY_NONE;
+        TimesPressed[i] = 0;
     }
 }
 
-void Macropad::load_parent_state()
+void LoadParentState()
 {
-    MacropadState* parent = m_State->get_parent_state();
-    if (parent != nullptr) {
-        this->set_macropad_state(parent);
+    MacropadState* parent = state->get_parent_state();
+    if (parent) {
+        LoadState(parent);
     }
 }
 
-uint32_t Macropad::pixelColor(uint8_t red, uint8_t green, uint8_t blue)
+bool PressKey(uint8_t key)
 {
-    return m_Pixels.Color(red, green, blue);
+    if (!use_usb) {
+        return false;
+    }
+
+    for (uint8_t i = 0; i < 6; i++) {
+        if (KeysPressed[i] == key) {
+            TimesPressed[i] += 1;
+            return true;
+        }
+    }
+
+    for (uint8_t i = 0; i < 6; i++) {
+        if (KeysPressed[i] == HID_KEY_NONE) {
+            KeysPressed[i] = key;
+            TimesPressed[i] = 1;
+            return true;
+        }
+    }
+
+    return false;
 }
 
-void Macropad::type(const char *str)
+bool ReleaseKey(uint8_t key)
 {
-    if (!m_UseTinyUSB || !tud_mounted()) {
+    if (!use_usb) {
+        return false;
+    }
+
+    for (uint8_t i = 0; i < 6; i++) {
+        if (KeysPressed[i] == key) {
+            if (TimesPressed[i] > 1) {
+                TimesPressed[i] -= 1;
+            } else {
+                while (KeysPressed[i + 1] && i < 5) {
+                    KeysPressed[i] = KeysPressed[i + 1];
+                    TimesPressed[i] = TimesPressed[i + 1];
+                    i++;
+                }
+                KeysPressed[i] = HID_KEY_NONE;
+                TimesPressed[i] = 0;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool PressConsumerKey(uint16_t key)
+{
+    if (!use_usb) {
+        return false;
+    }
+
+    ConsumerReport = key;
+    ConsumerReportQueued = true;
+    return true;
+}
+
+bool ReleaseConsumerKeys()
+{
+    return PressConsumerKey(0);
+}
+
+bool PressSystemKey(uint16_t key)
+{
+    if (!use_usb) {
+        return false;
+    }
+
+    SystemReport = key;
+    SystemReportQueued = true;
+    return true;
+}
+
+bool ReleaseSystemKeys()
+{
+    return PressSystemKey(0);
+}
+
+bool SendVendorCmd(uint16_t category, uint16_t command)
+{
+    if (VendorCmdCount >= VENDOR_CMD_QUEUE_LEN) {
+        return false;
+    }
+
+    VendorCmds[VendorCmdCount++] = (category << 16) | command;
+    return true;
+}
+
+void ClearVendorCmds(uint8_t num)
+{
+    // Only allow clearing at most VendorCmdCount commands
+    if (num > VendorCmdCount) {
+        num = VendorCmdCount;
+    }
+
+    // Clear the first num commands
+    for (int i = 0; i < num; i++) {
+        VendorCmds[i] = 0;
+    }
+
+    // Move any remaining commands down
+    for (int i = num; i < VendorCmdCount; i++) {
+        VendorCmds[i - num] = VendorCmds[i];
+    }
+
+    VendorCmdCount -= num;
+}
+
+bool PlayMacro(Macro* macro)
+{
+    if (RunningMacro) {
+        return false;
+    }
+
+    macro->restart();
+    RunningMacro = macro;
+    return true;
+}
+
+void Type(const char* str)
+{
+    if (!use_usb || !tud_mounted()) {
         return;
     }
 
@@ -456,148 +510,17 @@ void Macropad::type(const char *str)
     }
 }
 
-bool Macropad::press_key(uint8_t key)
+void UpdateOled()
 {
-    if (!m_UseTinyUSB) {
-        return false;
-    }
-
-    for (uint8_t i = 0; i < 6; i++) {
-        if (m_KeysPressed[i] == key) {
-            m_TimesPressed[i] += 1;
-            return true;
-        }
-    }
-
-    for (uint8_t i = 0; i < 6; i++) {
-        if (m_KeysPressed[i] == HID_KEY_NONE) {
-            m_KeysPressed[i] = key;
-            m_TimesPressed[i] = 1;
-            return true;
-        }
-    }
-
-    return false;
+    update_oled = use_oled;
 }
 
-bool Macropad::release_key(uint8_t key)
-{
-    if (!m_UseTinyUSB) {
-        return false;
-    }
-
-    for (uint8_t i = 0; i < 6; i++) {
-        if (m_KeysPressed[i] == key) {
-            if (m_TimesPressed[i] > 1) {
-                m_TimesPressed[i] -= 1;
-            } else {
-                while (m_KeysPressed[i + 1] && i < 5) {
-                    m_KeysPressed[i] = m_KeysPressed[i + 1];
-                    m_TimesPressed[i] = m_TimesPressed[i + 1];
-                    i++;
-                }
-                m_KeysPressed[i] = HID_KEY_NONE;
-                m_TimesPressed[i] = 0;
-            }
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool Macropad::press_consumer_key(uint16_t key)
-{
-    if (!m_UseTinyUSB) {
-        return false;
-    }
-
-    m_ConsumerReport = key;
-    m_ConsumerReportQueued = true;
-    return true;
-}
-
-bool Macropad::release_consumer_keys()
-{
-    if (!m_UseTinyUSB) {
-        return false;
-    }
-
-    m_ConsumerReport = 0;
-    m_ConsumerReportQueued = true;
-    return true;
-}
-
-bool Macropad::press_system_key(uint16_t key)
-{
-    if (!m_UseTinyUSB) {
-        return false;
-    }
-
-    m_SystemReport = key;
-    m_SystemReportQueued = true;
-    return true;
-}
-
-bool Macropad::release_system_keys()
-{
-    if (!m_UseTinyUSB) {
-        return false;
-    }
-
-    m_SystemReport = 0;
-    m_SystemReportQueued = true;
-    return true;
-}
-
-bool Macropad::play_macro(Macro* macro)
-{
-    if (m_RunningMacro) {
-        return false;
-    }
-
-    macro->restart();
-    m_RunningMacro = macro;
-    return true;
-}
-
-
-bool Macropad::send_vendor_cmd(uint16_t category, uint16_t command)
-{
-    if (VendorCmdCount >= 6) {
-        return false;
-    }
-
-    VendorCmds[VendorCmdCount++] = (category << 16) | command;
-    return true;
-}
-
-void Macropad::clear_vendor_cmds(uint8_t num)
-{
-    // Only allow clearing at most VendorCmdCount commands
-    if (num > VendorCmdCount) {
-        num = VendorCmdCount;
-    }
-
-    // Clear the first num commands
-    for (int i = 0; i < num; i++) {
-        VendorCmds[i] = 0;
-    }
-
-    // Move any remaining commands down
-    for (int i = num; i < VendorCmdCount; i++) {
-        VendorCmds[i - num] = VendorCmds[i];
-    }
-
-    VendorCmdCount -= num;
-}
-
-
-void Macropad::gpio_callback(uint gpio, uint32_t events)
+void gpio_callback(uint gpio, uint32_t events)
 {
     (void) gpio;
     (void) events;
-    Macropad::get_instance().encoder_tick();
+    Encoder.tick();
 }
+
+}; // namespace macropad
 
