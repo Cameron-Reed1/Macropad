@@ -94,6 +94,10 @@ void MenuState::OledDraw(SH1106_SPI oled)
     oled.print(macropad.get_encoder_position());
 
     oled.gotoXY(0, 1);
+    oled.print("MSC enabled: ");
+    oled.print(macropad.EnableMSC ? "true" : "false");
+
+    oled.gotoXY(0, 2);
     if (macropad.ComputerID == FRAMEWORK_KDE) {
         oled.print("Hello, Cameron");
     } else if (macropad.ComputerID != 0) {

@@ -89,6 +89,15 @@ void DebugState::Key6(bool rising, bool falling)
     }
 }
 
+void DebugState::Key7(bool rising, bool falling)
+{
+    (void) falling;
+
+    if (rising) {
+        Macropad::get_instance().EnableMSC = !Macropad::get_instance().EnableMSC;
+    }
+}
+
 void DebugState::OledDraw(SH1106_SPI oled)
 {
     if (m_ShowMem) {
@@ -107,7 +116,7 @@ void DebugState::PrintKeys(SH1106_SPI oled)
     const char* const labels[4][3] = {
         {"Back", "Boot", "Erase"},
         {"Any Key", "Memory", "Cmd"},
-        {"", "", ""},
+        {"MSC", "", ""},
         {"", "", ""}
     };
 

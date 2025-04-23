@@ -47,6 +47,7 @@ public:
     void Key4(bool rising, bool falling) override;
     void Key5(bool rising, bool falling) override;
     void Key6(bool rising, bool falling) override;
+    void Key7(bool rising, bool falling) override;
 
     void OledDraw(SH1106_SPI oled) override;
 

@@ -56,6 +56,7 @@ public:
     Macropad(const Macropad&) = delete;
 
 public:
+    bool EnableMSC = false;
     uint8_t kbd_leds = 0;
     uint16_t ComputerID = 0;
 

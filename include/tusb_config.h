@@ -65,7 +65,7 @@ extern "C" {
 #endif
 
 #ifndef CFG_TUSB_MEM_ALIGN
-#define CFG_TUSB_MEM_ALIGN          __attribute__ ((aligned(4)))
+#define CFG_TUSB_MEM_ALIGN        __attribute__ ((aligned(4)))
 #endif
 
 //--------------------------------------------------------------------
@@ -77,14 +77,16 @@ extern "C" {
 #endif
 
 //------------- CLASS -------------//
-#define CFG_TUD_HID             1
-#define CFG_TUD_CDC             0
-#define CFG_TUD_MSC             0
-#define CFG_TUD_MIDI            0
-#define CFG_TUD_VENDOR          1
+#define CFG_TUD_HID               1
+#define CFG_TUD_CDC               0
+#define CFG_TUD_MSC               1
+#define CFG_TUD_MIDI              0
+#define CFG_TUD_VENDOR            1
 
 // HID buffer size Should be sufficient to hold ID (if any) + Data
-#define CFG_TUD_HID_BUFSIZE     16
+#define CFG_TUD_HID_BUFSIZE       16
+
+#define CFG_TUD_MSC_EP_BUFSIZE    512
 
 #define CFG_TUD_VENDOR_RX_BUFSIZE 64
 #define CFG_TUD_VENDOR_TX_BUFSIZE 64
