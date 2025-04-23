@@ -59,6 +59,8 @@ public:
     bool EnableMSC = false;
     uint8_t kbd_leds = 0;
     uint16_t ComputerID = 0;
+    uint SpeakerSliceNum;
+    uint SpeakerSliceChan;
 
     uint32_t VendorCmds[8] = { 0 };
     uint8_t VendorCmdCount = 0;
@@ -113,9 +115,6 @@ private:
 
     uint16_t m_SystemReport;
     bool m_SystemReportQueued;
-
-    uint m_SpeakerSliceNum;
-    uint m_SpeakerSliceChan;
 
     Macro* m_RunningMacro = nullptr;
 

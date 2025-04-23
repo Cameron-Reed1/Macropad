@@ -7,6 +7,7 @@
 #include <hardware/watchdog.h>
 #include <tusb.h>
 #include <bsp/board.h>
+#include "hardware/gpio.h"
 #include "usb_descriptors.h"
 #include "Macropad.h"
 #include "PinDefs.h"
@@ -141,12 +142,16 @@ void Macropad::init_speaker()
 
     gpio_set_function(SPEAKER, GPIO_FUNC_PWM);
 
-    m_SpeakerSliceNum = pwm_gpio_to_slice_num(SPEAKER);
-    m_SpeakerSliceChan = pwm_gpio_to_channel(SPEAKER);
+    SpeakerSliceNum = pwm_gpio_to_slice_num(SPEAKER);
+    SpeakerSliceChan = pwm_gpio_to_channel(SPEAKER);
     pwm_config cfg = pwm_get_default_config();
-    pwm_config_set_clkdiv(&cfg, 133);
-    pwm_config_set_wrap(&cfg, (uint16_t) (MEGAHERTZ / 5));
-    pwm_init(m_SpeakerSliceNum, &cfg, false);
+    pwm_config_set_clkdiv(&cfg, 11.0833f);
+    //pwm_config_set_wrap(&cfg, (uint16_t) (MEGAHERTZ / 5));
+    //pwm_config_set_clkdiv(&cfg, 0);
+    pwm_config_set_wrap(&cfg, 250);
+    pwm_init(SpeakerSliceNum, &cfg, true);
+
+    gpio_put(SPEAKER_ENABLE, true);
 
     m_UseSpeaker = true;
 }
