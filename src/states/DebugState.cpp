@@ -19,7 +19,7 @@ const char nibble_to_hex_map[16] = {
 
 uint32_t getTotalHeap() {
    extern char __StackLimit, __bss_end__;
-   
+
    return &__StackLimit  - &__bss_end__;
 }
 
@@ -80,6 +80,15 @@ void DebugState::Key5(bool rising, bool falling)
     }
 }
 
+void DebugState::Key6(bool rising, bool falling)
+{
+    (void) rising;
+
+    if (falling) {
+        Macropad::get_instance().send_vendor_cmd(0x0102, 0x0304);
+    }
+}
+
 void DebugState::OledDraw(SH1106_SPI oled)
 {
     if (m_ShowMem) {
@@ -97,7 +106,7 @@ void DebugState::PrintKeys(SH1106_SPI oled)
 {
     const char* const labels[4][3] = {
         {"Back", "Boot", "Erase"},
-        {"Any Key", "Memory", ""},
+        {"Any Key", "Memory", "Cmd"},
         {"", "", ""},
         {"", "", ""}
     };

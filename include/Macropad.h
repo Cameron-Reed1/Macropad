@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <pico/stdio.h>
 #include <hardware/spi.h>
 #include "RotaryEncoder.h"
@@ -30,7 +31,7 @@ public:
     void load_parent_state();
 
     bool get_key_state(uint8_t key);
-    
+
     int get_encoder_position();
     void set_encoder_position(int new_position);
 
@@ -49,11 +50,17 @@ public:
     bool release_system_keys();
     bool play_macro(Macro* macro);
 
+    bool send_vendor_cmd(uint16_t category, uint16_t command);
+    void clear_vendor_cmds(uint8_t num);
+
     Macropad(const Macropad&) = delete;
 
 public:
     uint8_t kbd_leds = 0;
     uint16_t ComputerID = 0;
+
+    uint32_t VendorCmds[8] = { 0 };
+    uint8_t VendorCmdCount = 0;
 
 private:
     Macropad();

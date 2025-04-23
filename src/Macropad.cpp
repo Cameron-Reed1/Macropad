@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <pico/stdlib.h>
 #include <pico/binary_info.h>
 #include <hardware/pwm.h>
@@ -15,7 +16,8 @@ uint8_t const ascii_to_keycode_conv[128][2] =  { HID_ASCII_TO_KEYCODE };
 Macropad Macropad::s_Instance;
 
 Macropad::Macropad()
-: m_Keys(NUM_KEYS, true), m_Oled(SPI_PORT), m_State(nullptr), m_Encoder(ROTA, ROTB, RotaryEncoder::LatchMode::FOUR3), m_Pixels(NUM_PIXELS, NEOPIXEL, NEO_GRB + NEO_KHZ800)
+    : m_Keys(NUM_KEYS, true), m_Oled(SPI_PORT), m_State(nullptr), m_Encoder(ROTA, ROTB, RotaryEncoder::LatchMode::FOUR3),
+    m_Pixels(NUM_PIXELS, NEOPIXEL, NEO_GRB + NEO_KHZ800)
 {}
 
 Macropad& Macropad::get_instance()
@@ -558,6 +560,37 @@ bool Macropad::play_macro(Macro* macro)
     macro->restart();
     m_RunningMacro = macro;
     return true;
+}
+
+
+bool Macropad::send_vendor_cmd(uint16_t category, uint16_t command)
+{
+    if (VendorCmdCount >= 6) {
+        return false;
+    }
+
+    VendorCmds[VendorCmdCount++] = (category << 16) | command;
+    return true;
+}
+
+void Macropad::clear_vendor_cmds(uint8_t num)
+{
+    // Only allow clearing at most VendorCmdCount commands
+    if (num > VendorCmdCount) {
+        num = VendorCmdCount;
+    }
+
+    // Clear the first num commands
+    for (int i = 0; i < num; i++) {
+        VendorCmds[i] = 0;
+    }
+
+    // Move any remaining commands down
+    for (int i = num; i < VendorCmdCount; i++) {
+        VendorCmds[i - num] = VendorCmds[i];
+    }
+
+    VendorCmdCount -= num;
 }
 
 

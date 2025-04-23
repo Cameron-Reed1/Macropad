@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -194,8 +194,8 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 char const* string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-  "TinyUSB",                     // 1: Manufacturer
-  "TinyUSB Device",              // 2: Product
+  "Adafruit",                    // 1: Manufacturer
+  "Macropad",                    // 2: Product
   "123456",                      // 3: Serials, should use chip ID
   "Macropad HID",                // 4: HID class string
   "Reset Interface",             // 5: Vendor class string
