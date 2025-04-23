@@ -7,6 +7,7 @@
 #include "states/TimerState.h"
 #include "states/LinkState.h"
 #include "MacropadState.h"
+#include <cstddef>
 
 
 class MenuState: public MacropadState
@@ -26,6 +27,9 @@ public:
     void EncoderPress(bool rising, bool falling) override;
 
     void OledDraw(SH1106_SPI oled) override;
+
+public:
+    size_t val;
 
 private:
     TeamsState teamsState;

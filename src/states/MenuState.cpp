@@ -101,6 +101,10 @@ void MenuState::OledDraw(SH1106_SPI oled)
         oled.print(macropad.ComputerID);
     }
 
+    oled.gotoXY(0, 7);
+    oled.print("Val: ");
+    oled.print(val);
+
 
     /* CFG* cfg = Config::get();
     oled.gotoXY(0, 1);
