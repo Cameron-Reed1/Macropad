@@ -19,12 +19,11 @@ project(Macropad C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-include("libraries/pico_neopixels/pico_neopixel.cmake")
-include("libraries/SH1106/SH1106_oled.cmake")
+include("libraries/libraries.cmake")
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(Macropad src/main.cpp src/Macropad.cpp src/MacropadState.cpp src/MacropadUsbCallbacks.cpp src/RotaryEncoder.cpp src/Keys.cpp src/RippleAnim.cpp src/usb_descriptors.c src/Macro.cpp src/Config.cpp src/states/common.cpp src/states/ConfigState.cpp src/states/DebugState.cpp src/states/GenericState.cpp src/states/LinkState.cpp src/states/MenuState.cpp src/states/PowerOffState.cpp src/states/TeamsState.cpp src/states/TimerState.cpp src/msc.cpp)
+add_executable(Macropad src/main.cpp src/Macropad.cpp src/MacropadState.cpp src/MacropadUsbCallbacks.cpp src/RotaryEncoder.cpp src/Keys.cpp src/RippleAnim.cpp src/usb_descriptors.c src/Macro.cpp src/Config.cpp src/states/common.cpp src/states/ConfigState.cpp src/states/DebugState.cpp src/states/GenericState.cpp src/states/LinkState.cpp src/states/MenuState.cpp src/states/PowerOffState.cpp src/states/TeamsState.cpp src/states/TimerState.cpp src/msc.cpp src/fs.cpp)
 
 pico_set_program_name(Macropad "Macropad")
 pico_set_program_version(Macropad "0.3")
@@ -51,6 +50,7 @@ target_link_libraries(Macropad
         SH1106_oled
         tinyusb_device
         tinyusb_board
+        littlefs
         )
 
 target_include_directories(Macropad PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include)

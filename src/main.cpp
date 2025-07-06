@@ -2,6 +2,7 @@
 #include "RippleAnim.h"
 #include "Macropad.h"
 #include "Config.h"
+#include "fs.h"
 
 
 int main(void)
@@ -9,6 +10,7 @@ int main(void)
     Macropad& macropad = Macropad::get_instance();
     MenuState menuState = MenuState();
     CFG* cfg = Config::read();
+    fs::init();
 
     macropad.init(true, true, true, false, false, true, false);
     menuState.Activate();

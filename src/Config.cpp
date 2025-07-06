@@ -1,3 +1,4 @@
+#include <pico.h>
 #include <boards/adafruit_macropad_rp2040.h>
 #include <hardware/flash.h>
 #include <hardware/sync.h>
@@ -10,6 +11,7 @@
 static_assert(PICO_FLASH_SIZE_BYTES % FLASH_SECTOR_SIZE == 0, "Flash does not fit a whole number of sectors");
 static_assert(FLASH_SECTOR_SIZE % FLASH_PAGE_SIZE == 0, "Flash sectors do not fit a whole number of pages");
 static_assert(sizeof(CFG) <= FLASH_PAGE_SIZE, "CFG struct will not fit in a flash page");
+static_assert(FLASH_SECTOR_SIZE * (NUM_SLOTS + 1) < 1024 * 1024, "CFG slots take up more than 1MiB");
 
 
 static uint32_t CONFIG_SLOT_SECTOR_OFFSETS[NUM_SLOTS] = {
@@ -37,7 +39,7 @@ CFG defaults = {
     .colorOutR = 0x00,
     .colorOutG = 0xFF,
     .colorOutB = 0xFF,
-    
+
     .colorInR = 0x00,
     .colorInG = 0xFF,
     .colorInB = 0x00,
