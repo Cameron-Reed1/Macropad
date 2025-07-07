@@ -26,6 +26,7 @@
 #include <tusb.h>
 #include <device/usbd.h>
 #include <pico/usb_reset_interface.h>
+#include <pico/unique_id.h>
 
 #include "usb_descriptors.h"
 
@@ -194,13 +195,15 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 // String Descriptors
 //--------------------------------------------------------------------+
 
+static char usbd_serial_str[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
+
 // array of pointer to string descriptors
 char const* string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
   "Adafruit",                    // 1: Manufacturer
   "Macropad",                    // 2: Product
-  "123456",                      // 3: Serials, should use chip ID
+  usbd_serial_str,               // 3: Serials, should use chip ID
   "Macropad HID",                // 4: HID class string
   "Configuration MSC",           // 5: MSC class string
   "Reset Interface",             // 6: Vendor class string
@@ -215,6 +218,11 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
   (void) langid;
 
   uint8_t chr_count;
+
+  // Assign the SN using the unique flash id
+  if (!usbd_serial_str[0]) {
+      pico_get_unique_board_id_string(usbd_serial_str, sizeof(usbd_serial_str));
+  }
 
   if ( index == 0)
   {
