@@ -8,6 +8,7 @@
 #include <tusb.h>
 
 #include "Macropad.h"
+#include "states/MenuState.h"
 #include "fs.h"
 
 
@@ -124,7 +125,7 @@ bool tud_msc_start_stop_cb(uint8_t lun, uint8_t power_condition, bool start, boo
                 flash_range_program(fs::FLASH_OFFSET + (FLASH_SECTOR_SIZE * cached_sector_id), cached_sector, FLASH_SECTOR_SIZE);
                 restore_interrupts(ints);
             }
-            Macropad::get_instance().EnableMSC = false;
+            MenuState::UpdateMessage();
         }
     }
 

@@ -12,6 +12,8 @@ int main(void)
     CFG* cfg = Config::read();
     fs::init();
 
+    MenuState::UpdateMessage();
+
     macropad.init(true, true, true, false, false, true, false);
     menuState.Activate();
     ripple_anim_setup();

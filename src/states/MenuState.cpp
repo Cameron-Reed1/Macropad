@@ -10,7 +10,10 @@
 #include "MacropadState.h"
 #include "ComputerIDs.h"
 #include "Macropad.h"
+#include "fs.h"
 
+
+char MenuState::message[22] = "";
 
 MenuState::MenuState()
     : MacropadState(nullptr), teamsState(this), genericState(this), configState(this), linkState(this), debugState(this), timerState(this)
@@ -85,6 +88,25 @@ void MenuState::EncoderPress(bool rising, bool falling)
 }
 
 
+void MenuState::UpdateMessage()
+{
+    fs::File file("message.txt", LFS_O_RDONLY);
+    if (file.open_err < 0) {
+        memcpy(message, "Read failed", 12);
+        return;
+    }
+
+    lfs_size_t len = file.read(message, sizeof(message) - 1);
+    if (len < 0) {
+        memcpy(message, "Read failed", 12);
+        return;
+    }
+    message[len] = '\x00';
+
+    Macropad::get_instance().update_oled();
+}
+
+
 void MenuState::OledDraw(SH1106_SPI oled)
 {
     Macropad& macropad = Macropad::get_instance();
@@ -104,6 +126,9 @@ void MenuState::OledDraw(SH1106_SPI oled)
         oled.print("Computer ID: ");
         oled.print(macropad.ComputerID);
     }
+
+    oled.gotoXY(0, 3);
+    oled.print(MenuState::message);
 
 
     /* CFG* cfg = Config::get();

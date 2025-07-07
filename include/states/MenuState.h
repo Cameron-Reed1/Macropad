@@ -27,6 +27,8 @@ public:
 
     void OledDraw(SH1106_SPI oled) override;
 
+    static void UpdateMessage();
+
 private:
     TeamsState teamsState;
     GenericState genericState;
@@ -34,5 +36,7 @@ private:
     LinkState linkState;
     DebugState debugState;
     TimerState timerState;
+
+    static char message[22];
 };
 
