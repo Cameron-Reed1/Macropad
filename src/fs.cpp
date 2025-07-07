@@ -4,6 +4,7 @@
 #include <hardware/flash.h>
 #include <hardware/gpio.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "Macropad.h"
 #include "fs.h"
@@ -60,6 +61,97 @@ void init()
 
     // Enable USB MSC if we were able to mount the filesystem
     Macropad::get_instance().EnableMSC = true;
+}
+
+
+File::File(const char* const path, int flags)
+{
+    open_err = lfs_file_open(&lfs, &file, path, flags);
+    closed = open_err < 0;
+}
+
+lfs_size_t File::read(void* buffer, lfs_size_t size)
+{
+    return lfs_file_read(&lfs, &file, buffer, size);
+}
+
+int File::close()
+{
+    int err = lfs_file_close(&lfs, &file);
+    closed = true;
+    return err;
+}
+
+File::~File()
+{
+    close();
+}
+
+
+Dir::Dir(const char* const path)
+{
+    open_err = lfs_dir_open(&lfs, &dir, path);
+}
+
+int Dir::close()
+{
+    return lfs_dir_close(&lfs, &dir);
+}
+
+
+Dir::iterator Dir::begin()
+{
+    return ++iterator(this);
+}
+
+Dir::iterator Dir::end()
+{
+    return iterator();
+}
+
+Dir::iterator::iterator()
+    : m_dir(nullptr), m_end(true) {}
+
+Dir::iterator::iterator(Dir* dir)
+    : m_dir(dir), m_end(false) {}
+
+Dir::iterator::value_type Dir::iterator::operator*() const
+{
+    if (m_end) {
+        return nullptr;
+    }
+    return &m_current;
+}
+
+Dir::iterator& Dir::iterator::operator++()
+{
+    if (m_end) {
+        return *this;
+    }
+
+    int ret = lfs_dir_read(&lfs, &m_dir->dir, &m_current);
+    if (ret <= 0) {
+        m_end = true;
+    }
+    return *this;
+}
+
+bool operator==(const Dir::iterator& lhs, const Dir::iterator& rhs)
+{
+    if (lhs.m_end && rhs.m_end) {
+        return true;
+    }
+
+    if (lhs.m_end || rhs.m_end) {
+        return false;
+    }
+
+    return strcmp(lhs.m_current.name, rhs.m_current.name) == 0;
+}
+
+bool operator!=(const Dir::iterator& lhs, const Dir::iterator& rhs)
+{
+    return !(lhs == rhs);
 }
 
 } // namespace fs
