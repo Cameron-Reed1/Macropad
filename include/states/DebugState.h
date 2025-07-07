@@ -10,6 +10,17 @@ enum class KeyType {
     SYSTEM,
 };
 
+class DirListState: public MacropadState
+{
+public:
+    DirListState() = delete;
+    DirListState(MacropadState* parent);
+
+    void KeyAny(uint8_t key, bool rising, bool falling) override;
+
+    void OledDraw(SH1106_SPI oled) override;
+};
+
 class AnyKeyState: public MacropadState
 {
 public:
@@ -48,6 +59,7 @@ public:
     void Key5(bool rising, bool falling) override;
     void Key6(bool rising, bool falling) override;
     void Key7(bool rising, bool falling) override;
+    void Key8(bool rising, bool falling) override;
 
     void OledDraw(SH1106_SPI oled) override;
 
@@ -56,6 +68,7 @@ private:
 
 private:
     AnyKeyState anyKeyState;
+    DirListState dirListState;
     bool m_ShowMem;
 };
 

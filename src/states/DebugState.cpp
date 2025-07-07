@@ -8,6 +8,7 @@
 #include "MacropadState.h"
 #include "PinDefs.h"
 #include "Config.h"
+#include "fs.h"
 
 
 const char nibble_to_hex_map[16] = {
@@ -31,7 +32,7 @@ uint32_t getFreeHeap() {
 
 
 DebugState::DebugState(MacropadState* parent)
-    : MacropadState(parent), anyKeyState(this), m_ShowMem(false) { }
+    : MacropadState(parent), anyKeyState(this), dirListState(this), m_ShowMem(false) { }
 
 
 void DebugState::KeyAny(uint8_t key, bool rising, bool falling)
@@ -98,6 +99,15 @@ void DebugState::Key7(bool rising, bool falling)
     }
 }
 
+void DebugState::Key8(bool rising, bool falling)
+{
+    (void) rising;
+
+    if (falling) {
+        dirListState.Activate();
+    }
+}
+
 void DebugState::OledDraw(SH1106_SPI oled)
 {
     if (m_ShowMem) {
@@ -116,7 +126,7 @@ void DebugState::PrintKeys(SH1106_SPI oled)
     const char* const labels[4][3] = {
         {"Back", "Boot", "Erase"},
         {"Any Key", "Memory", "Cmd"},
-        {"MSC", "", ""},
+        {"MSC", "Dir List", ""},
         {"", "", ""}
     };
 
@@ -288,3 +298,29 @@ void AnyKeyState::CycleEncoderSpeed()
     }
 }
 
+DirListState::DirListState(MacropadState* parent)
+    : MacropadState(parent)
+{
+    set_oled_automatic_updates(false);
+};
+
+void DirListState::KeyAny(uint8_t key, bool rising, bool falling)
+{
+    ripple(key, rising, falling);
+    return_to_parent_state(rising, falling);
+}
+
+void DirListState::OledDraw(SH1106_SPI oled)
+{
+    uint8_t y = 0;
+
+    fs::Dir dir("/");
+    for (const lfs_info* entry: dir) {
+        if (strcmp(entry->name, ".") == 0 or strcmp(entry->name, "..") == 0) {
+            continue;
+        }
+        oled.gotoXY(0, y++);
+        oled.print(entry->type == LFS_TYPE_REG ? "File: " : "Dir:  ");
+        oled.print(entry->name);
+    }
+}
