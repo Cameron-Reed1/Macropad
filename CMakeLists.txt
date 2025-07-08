@@ -26,7 +26,7 @@ include("libraries/libraries.cmake")
 add_executable(Macropad src/main.cpp src/Macropad.cpp src/MacropadState.cpp src/MacropadUsbCallbacks.cpp src/RotaryEncoder.cpp src/Keys.cpp src/RippleAnim.cpp src/usb_descriptors.c src/Macro.cpp src/Config.cpp src/states/common.cpp src/states/ConfigState.cpp src/states/DebugState.cpp src/states/GenericState.cpp src/states/LinkState.cpp src/states/MenuState.cpp src/states/PowerOffState.cpp src/states/TeamsState.cpp src/states/TimerState.cpp src/msc.cpp src/fs.cpp)
 
 pico_set_program_name(Macropad "Macropad")
-pico_set_program_version(Macropad "0.3")
+pico_set_program_version(Macropad "0.4")
 
 pico_enable_stdio_uart(Macropad 0)
 pico_enable_stdio_usb(Macropad 0)
