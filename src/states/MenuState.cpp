@@ -116,8 +116,7 @@ void MenuState::OledDraw(SH1106_SPI oled)
     oled.print(macropad.get_encoder_position());
 
     oled.gotoXY(0, 1);
-    oled.print("MSC enabled: ");
-    oled.print(macropad.EnableMSC ? "true" : "false");
+    oled.print(MenuState::message);
 
     oled.gotoXY(0, 2);
     if (macropad.ComputerID == FRAMEWORK_KDE) {
@@ -126,9 +125,6 @@ void MenuState::OledDraw(SH1106_SPI oled)
         oled.print("Computer ID: ");
         oled.print(macropad.ComputerID);
     }
-
-    oled.gotoXY(0, 3);
-    oled.print(MenuState::message);
 
 
     /* CFG* cfg = Config::get();
