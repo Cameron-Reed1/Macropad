@@ -1,4 +1,4 @@
-This is the firmware I wrote for my (Adafruit MacroPad RP2040)[https://www.adafruit.com/product/5128]
+This is the firmware I wrote for my [Adafruit MacroPad RP2040](https://www.adafruit.com/product/5128)
 
 
 ### Building from source
@@ -11,7 +11,7 @@ cmake -S . -B build
 cmake --build build
 ```
 
-Alternatively, if you have (just)[https://github.com/casey/just] installed:
+Alternatively, if you have [just](https://github.com/casey/just) installed:
 
 ```
 git clone https://github.com/Cameron-Reed1/Macropad.git
